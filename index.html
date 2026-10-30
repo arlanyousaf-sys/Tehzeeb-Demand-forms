@@ -1555,11 +1555,245 @@ renderTabs();renderForm();
   }
   requestAnimationFrame(tick);
 })();
-</script>
-</body>
-</html>
 <script>
+/* ===== FIRESTORE SHARED SYNC PATCH ===== */
+(function(){
+  if(typeof firebase==='undefined'||!auth||!db){
+    console.warn('Firebase not ready'); return;
+  }
 
+  var SHARED_ROOT   = db.collection('shared');
+  var SHARED_DEM    = SHARED_ROOT.doc('demands').collection('items');
+  var SHARED_CFG    = SHARED_ROOT.doc('settings');
+  var lastWriterUid = null;
+
+  function newNumericId(){
+    return Date.now() * 1000 + Math.floor(Math.random()*1000);
+  }
+
+  if(typeof editingId !== 'undefined' && editingId != null){
+    editingId = Number(editingId) || null;
+  }
+
+  var SETTING_KEYS = ['bkry_view','bkry_ufont','bkry_bfly',
+                      'bkry_logo_dash','bkry_logo_pdf',
+                      'bkry_sign_bm','bkry_sign_tech'];
+
+  function pushSettings(){
+    if(!auth.currentUser) return;
+    var s = {};
+    SETTING_KEYS.forEach(function(k){
+      var v = localStorage.getItem(k);
+      if(v !== null) s[k] = v;
+    });
+    lastWriterUid = auth.currentUser.uid;
+    SHARED_CFG.set({settings:s, updatedBy:lastWriterUid,
+                    updatedAt:new Date().toISOString()},{merge:true})
+      .catch(function(e){console.warn('settings push',e)});
+  }
+
+  var _s = storage.set;
+  storage.set = function(k,v){
+    _s(k,v);
+    if(/^bkry_(view|ufont|bfly|logo_|sign_)/.test(k)) pushSettings();
+  };
+  var _as = authStorage.set;
+  authStorage.set = function(k,v){
+    _as(k,v);
+    if(/^bkry_(view|ufont|bfly|logo_|sign_)/.test(k)) pushSettings();
+  };
+
+  function pullSettings(){
+    SHARED_CFG.onSnapshot(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data() || {};
+      if(d.updatedBy === auth.currentUser.uid) return;
+      var s = d.settings || {};
+      var changed = false;
+      SETTING_KEYS.forEach(function(k){
+        if(typeof s[k] === 'string' && localStorage.getItem(k) !== s[k]){
+          try{localStorage.setItem(k,s[k]); changed = true}catch(e){}
+        }
+      });
+      if(changed){
+        applyUFont(); applyBfly(); applyDashLogo();
+        if(typeof renderForm === 'function') renderForm();
+        if(view==='pending'||view==='received'||view==='total') drawList(view);
+        if(!document.getElementById('settingsOv').hidden) renderSettings();
+      }
+    });
+  }
+
+  window.loadFromCloud = function(){
+    return new Promise(function(resolve){
+      if(!auth.currentUser){ resolve(); return; }
+
+      try{
+        var oldRaw = localStorage.getItem('bkry_demands_v1');
+        if(oldRaw){
+          var oldArr = JSON.parse(oldRaw);
+          if(Array.isArray(oldArr) && oldArr.length){
+            var jobs = oldArr.map(function(d){
+              var nid = (typeof d.id==='number') ? d.id : (Number(d.id)||newNumericId());
+              var clean = JSON.parse(JSON.stringify(d));
+              clean.numId   = nid;
+              clean.created = clean.created || new Date(nid).toISOString();
+              clean.ownerUid = auth.currentUser.uid;
+              delete clean.id;
+              return SHARED_DEM.doc(String(nid)).set(clean,{merge:true});
+            });
+            Promise.all(jobs).then(function(){
+              localStorage.removeItem('bkry_demands_v1');
+              console.log('[migrate]', oldArr.length, 'demands -> shared');
+            }).catch(function(e){console.warn('migrate err',e)});
+          }
+        }
+      }catch(e){}
+
+      SHARED_DEM.orderBy('created','desc').onSnapshot(function(snap){
+        var arr = [];
+        snap.forEach(function(doc){
+          var o = doc.data() || {};
+          var nid = o.numId;
+          if(typeof nid !== 'number'){
+            nid = Number(doc.id);
+            if(isNaN(nid)) nid = newNumericId();
+            o.numId = nid;
+          }
+          o.id = nid;
+          arr.push(o);
+        });
+        window.demands = arr;
+        demands = arr;
+        if(typeof view !== 'undefined'){
+          if(view==='home'){ try{renderHome()}catch(e){} }
+          else if(view==='pending'||view==='received'||view==='total'){
+            try{drawList(view)}catch(e){}
+          }
+        }
+      }, function(err){ console.warn('listener err', err); toast('Sync error: '+err.code); });
+
+      pullSettings();
+      SHARED_CFG.get().then(function(doc){
+        if(doc.exists){
+          var s = (doc.data()||{}).settings||{};
+          SETTING_KEYS.forEach(function(k){
+            if(typeof s[k]==='string') try{localStorage.setItem(k,s[k])}catch(e){}
+          });
+          applyUFont(); applyBfly(); applyDashLogo();
+          resolve();
+        } else {
+          pushSettings();
+          resolve();
+        }
+      }).catch(function(){ resolve(); });
+    });
+  };
+
+  window.saveToPending = function(){
+    if(!auth.currentUser){ toast('Login required'); return; }
+
+    var p = active, pg = PAGES[p];
+    var total = rowCount(p), items = [];
+    for(var r=0; r<total; r++){
+      var it = (data[p+'_'+r+'_0']||'').trim();
+      if(pg.type==='demand'){
+        items.push({item:it,
+          inStore:(data[p+'_'+r+'_1']||'').trim(),
+          demand:(data[p+'_'+r+'_2']||'').trim(),
+          remarks:(data[p+'_'+r+'_3']||'').trim(),
+          received:false, receivedDate:''});
+      } else {
+        items.push({item:it,
+          inStore:(data[p+'_'+r+'_1']||'').trim(),
+          demand:'',
+          remarks:(data[p+'_'+r+'_2']||'').trim(),
+          received:false, receivedDate:''});
+      }
+      var _fm = cellFm(p, r, pg.type); if(_fm) items[items.length-1].fm = _fm;
+    }
+
+    var defBranch = "تہذیب بیکرز-G9";
+    var defDate   = getTodayLocal();
+    var br  = (data[p+'_branch']!==undefined && data[p+'_branch']!=='') ? data[p+'_branch'] : defBranch;
+    var st  = (data[p+'_sendto']||'').trim();
+    var bf  = data[p+'_branch_f']||'', sf = data[p+'_sendto_f']||'';
+    var dt  = (data[p+'_date']!==undefined && data[p+'_date']!=='') ? data[p+'_date'] : defDate;
+
+    var payload = {
+      formType: pg.type, form: pg.tab,
+      branch: br.trim(), dateText: dt.trim(), sendTo: st, bf: bf, sf: sf,
+      items: items,
+      ownerUid: auth.currentUser.uid
+    };
+
+    if(editingId !== null && editingId !== undefined){
+      var docRef = SHARED_DEM.doc(String(editingId));
+      docRef.get().then(function(doc){
+        var old = doc.exists ? doc.data() : {};
+        var oldItems = old.items || [];
+        for(var k=0; k<items.length && k<oldItems.length; k++){
+          if(oldItems[k].received && items[k].item===oldItems[k].item){
+            items[k].received     = oldItems[k].received;
+            items[k].receivedDate = oldItems[k].receivedDate;
+          }
+        }
+        payload.items   = items;
+        payload.numId   = (typeof old.numId==='number') ? old.numId : Number(editingId);
+        payload.created = old.created || new Date().toISOString();
+        payload.lastEditorUid = auth.currentUser.uid;
+        return docRef.set(payload,{merge:true});
+      }).then(function(){
+        toast('Form updated ✓');
+        editingId = null;
+        if(confirm('Form saaf kar dun?')) clearNow();
+      }).catch(function(e){ console.error(e); toast('Update fail: '+(e.message||'')) });
+    } else {
+      var nid = newNumericId();
+      payload.numId   = nid;
+      payload.created = new Date().toISOString();
+      SHARED_DEM.doc(String(nid)).set(payload).then(function(){
+        toast('Pending mein save ✓');
+        if(confirm('Form saaf kar dun?')) clearNow();
+      }).catch(function(e){ console.error(e); toast('Save fail: '+(e.message||'')) });
+    }
+  };
+
+  window.setRecv = function(id, idxs, checked){
+    if(!auth.currentUser) return;
+    var d = demands.filter(function(x){ return String(x.id) === String(id) })[0];
+    if(!d) return;
+    idxs.forEach(function(i){
+      if(d.items[i]){
+        d.items[i].received     = checked;
+        d.items[i].receivedDate = checked ? todayISO() : '';
+      }
+    });
+    if(typeof openIds !== 'undefined') openIds[id] = true;
+    SHARED_DEM.doc(String(id)).update({
+      items: d.items,
+      lastEditorUid: auth.currentUser.uid,
+      lastEditAt: new Date().toISOString()
+    }).catch(function(e){ console.warn('setRecv err', e) });
+    drawList(view);
+    toast(checked ? 'Received ✓' : 'Wapas Pending');
+  };
+
+  window.delDemand = function(id){
+    if(!confirm('Yeh poora form delete kar den?')) return;
+    if(!auth.currentUser) return;
+    demands = demands.filter(function(x){ return String(x.id)!==String(id) });
+    window.demands = demands;
+    drawList(view);
+    SHARED_DEM.doc(String(id)).delete()
+      .catch(function(e){ console.warn('del err', e) });
+  };
+
+  window.saveDemands = function(){};
+
+  console.log('[firebase-patch shared] active');
+})();
 </script>
+
 </body>
 </html>
