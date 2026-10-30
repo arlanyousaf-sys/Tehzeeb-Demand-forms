@@ -1,0 +1,1860 @@
+7<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE BKRY - Secure Login &amp; Forms</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e0e5ec">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Demand Form">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){})})}</script>
+<style>
+
+</style>
+</head>
+<body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" id="vp" content="width=device-width, initial-scale=1">
+<title>THE BKRY - Secure Login & Forms</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+  :root {
+    --bg: #e0e5ec;
+    --shadow-dark: #bec3c9;
+    --shadow-light: #ffffff;
+    --ink: #2d3748;
+    --mut: #718096;
+    --br: #007bff;
+    --br2: #0056b3;
+    --ln: #cbd5e1;
+    --t-border: #a3b1c6;
+    --urdu: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Segoe UI', Tahoma, serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg); color: var(--ink);
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  #auth-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; min-height: 100vh; padding: 20px; }
+  .auth-card {
+    background: var(--bg); width: 100%; max-width: 380px; padding: 40px 30px; border-radius: 30px;
+    box-shadow: 20px 20px 60px var(--shadow-dark), -20px -20px 60px var(--shadow-light);
+    position: relative; animation: fadeIn 0.4s ease-in-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  #signup-section { display: none; }
+  .icon-container {
+    width: 70px; height: 70px; background: var(--bg); border-radius: 50%;
+    display: flex; justify-content: center; align-items: center; font-size: 28px;
+    margin: 0 auto 20px; box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+  }
+  .header-text { text-align: center; margin-bottom: 25px; }
+  .header-text h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+  .header-text p { font-size: 13px; color: var(--mut); }
+  .input-group { margin-bottom: 18px; position: relative; }
+  .input-group label { display: block; font-size: 12px; color: var(--ink); font-weight: 600; margin-bottom: 8px; margin-left: 5px; }
+  .input-wrapper { position: relative; }
+  .input-wrapper input {
+    width: 100%; padding: 15px 20px; border: none; outline: none; background: var(--bg);
+    border-radius: 15px; color: var(--ink); font-size: 14px;
+    box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+    transition: all 0.3s ease;
+  }
+  .input-wrapper input:focus {
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light), 0 0 0 2px var(--br);
+  }
+  .toggle-password { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; color: var(--mut); user-select: none; }
+  .options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 12px; }
+  .options label { display: flex; align-items: center; gap: 5px; color: var(--ink); cursor: pointer; }
+  .options input[type="checkbox"] { accent-color: var(--br); cursor: pointer; }
+  .options a { color: var(--br); text-decoration: none; font-weight: 600; }
+  .action-btn {
+    width: 100%; padding: 15px; border: none; border-radius: 15px; background: var(--br);
+    color: white; font-size: 16px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4); transition: all 0.3s ease;
+    margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .action-btn:active { box-shadow: inset 2px 2px 5px rgba(0,0,0,0.2); }
+  .footer-text { text-align: center; font-size: 13px; color: var(--mut); margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+  .footer-text a { color: var(--br); text-decoration: none; font-weight: bold; cursor: pointer; }
+  .add-btn {
+    width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--bg);
+    color: var(--br); font-size: 20px; font-weight: bold; cursor: pointer;
+    box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+    display: flex; justify-content: center; align-items: center; transition: 0.2s;
+  }
+  .add-btn:active { box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); }
+  #app-wrapper { display: none; width: 100%; flex-direction: column; align-items: center; }
+  .app-bar {
+    width: 100%; position: sticky; top: 0; z-index: 20;
+    background: var(--bg); border-bottom: 1px solid var(--ln);
+    padding: 12px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    box-shadow: 0 4px 10px -4px var(--shadow-dark);
+  }
+  .dot { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--br); font-weight: 800; box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light); }
+  .app-bar h1 { font-size: 16px; margin: 0; color: var(--ink); }
+  .app-bar small { display: block; color: var(--mut); font-size: 11px; }
+  .sp { flex: 1; }
+  .n-btn {
+    border: none; cursor: pointer; font: 600 13px 'Segoe UI', Arial; padding: 9px 14px;
+    border-radius: 10px; background: var(--bg); color: var(--br);
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    transition: all 0.15s ease;
+  }
+  .n-btn:hover { color: var(--br2); }
+  .n-btn:active { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+  .n-btn.p { background: var(--br); color: #fff; box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4); }
+  .n-btn.p:active { box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2); }
+  .n-btn.d { color: #dc3545; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 12px 0; width: 100%; }
+  .tabs { display: flex; gap: 10px; overflow-x: auto; padding: 4px 4px 15px; }
+  .chip {
+    flex: 0 0 auto; border: none; background: var(--bg); color: var(--mut);
+    padding: 10px 18px; border-radius: 12px; font: 600 14px 'Segoe UI';
+    cursor: pointer; box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+  }
+  .chip.on { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); color: var(--br); font-weight: 700; }
+  .card {
+    background: var(--bg); border-radius: 20px;
+    box-shadow: 10px 10px 30px var(--shadow-dark), -10px -10px 30px var(--shadow-light);
+    border: none; overflow: hidden; margin-bottom: 30px;
+  }
+  .ch { padding: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--ln); }
+  .ch h2 { margin: 0; font-size: 18px; color: var(--ink); }
+  .ch p { margin: 4px 0 0; color: var(--mut); font-size: 12.5px; }
+  .hr { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .bdg { background: var(--bg); box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); border-radius: 999px; padding: 5px 12px; font: 600 12px 'Segoe UI'; color: var(--mut); }
+  .rn { display: inline-flex; align-items: center; gap: 6px; font: 700 11px 'Segoe UI'; color: var(--mut); text-transform: uppercase; }
+  .rn input { width: 66px; border: none; border-radius: 8px; padding: 6px; font-size: 14px; text-align: center; outline: none; background: var(--bg); box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); color: var(--ink); }
+  .meta { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; padding: 20px; }
+  .fld label { display: block; font: 700 11px 'Segoe UI'; color: var(--mut); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; margin-left: 5px; }
+  .fld input { width: 100%; border: none; border-radius: 12px; background: var(--bg); padding: 14px; font-family: var(--urdu); font-size: 17px; line-height: 2.0; direction: rtl; text-align: right; outline: none; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); color: var(--ink); min-height: 64px; box-sizing: border-box; }
+  .fld input:focus { box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light), 0 0 0 2px var(--br); }
+  .fld input[type="date"] { font-family: 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: normal; padding: 12px; cursor: pointer; direction: ltr; text-align: left; min-height: auto; }
+  .fld input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+  .sc { contain: layout paint; transform: translateZ(0); overflow: auto; max-height: 65vh; margin: 0 20px 10px; border-radius: 12px; background: var(--bg); box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+  .sc::-webkit-scrollbar { width: 8px; height: 8px; }
+  .sc::-webkit-scrollbar-thumb { background: var(--shadow-dark); border-radius: 10px; }
+  table.g { border-collapse: collapse; width: 100%; table-layout: fixed; min-width: 800px; }
+  table.g th { background: var(--bg); color: var(--ink); font-size: 12px; letter-spacing: .6px; text-transform: uppercase; padding: 12px 10px; text-align: left; border-bottom: 2px solid var(--t-border); border-right: 1px solid var(--t-border); white-space: nowrap; position: sticky; top: 0; z-index: 3; }
+  table.g td { padding: 0; border-bottom: 1px solid var(--t-border); border-right: 1px solid var(--t-border); vertical-align: top; }
+  table.g td:last-child, table.g th:last-child { border-right: 0; }
+  table.g tr:last-child td { border-bottom: 0; }
+  table.g .sr { position: sticky; left: 0; z-index: 2; text-align: center; font-weight: 700; color: var(--mut); font-size: 13px; background: var(--bg); padding: 12px 4px; }
+  table.g th.sr { position: sticky; left: 0; top: 0; z-index: 4; }
+  textarea.ur { display: block; width: 100%; min-height: 66px; border: none; outline: none; background: transparent; padding: 12px 12px; font-family: var(--urdu); font-size: 17px; line-height: 2.4; direction: rtl; text-align: right; color: var(--ink); resize: none; overflow: hidden; word-wrap: break-word; white-space: pre-wrap; }
+  textarea.ur:focus { background: rgba(255,255,255,0.4); box-shadow: inset 0 0 0 2px var(--br); }
+  .ft { padding: 15px 20px 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .hint { font-size: 12.5px; color: var(--mut); }
+  .hello h2 { margin: 4px 2px 2px; font-size: 24px; color: var(--ink); }
+  .hello p { margin: 0 2px 20px; color: var(--mut); font-size: 14px; }
+  .sg { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .stat { display: flex; flex-direction: column; align-items: flex-start; min-height: 150px; border: none; text-align: left; cursor: pointer; padding: 25px 20px; border-radius: 20px; color: var(--ink); font-family: inherit; background: var(--bg); background-image: linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,0) 60%); box-shadow: 5px 7px 12px rgba(0,0,0,.28), -3px -3px 8px rgba(255,255,255,.7), inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.2); transition: transform .12s, box-shadow .12s; }
+  .stat:hover { transform: translateY(-3px); }
+  .stat:active { transform: translateY(3px); box-shadow: inset 3px 3px 7px rgba(0,0,0,.3), inset -2px -2px 6px rgba(255,255,255,.25), 0 1px 2px rgba(0,0,0,.2); }
+  .stat .ico { font-size: 26px; min-height: 34px; display: flex; align-items: center; }
+  .stat .ico svg { width: 34px; height: 34px; display: block; }
+  .stat .bot { margin-top: auto; align-self: flex-end; text-align: right; padding-top: 14px; }
+  .stat .t { font-size: 14px; font-weight: 700; color: var(--mut); margin-top: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat .n { font-size: 44px; font-weight: 800; color: var(--br); line-height: 1.1; margin-top: 8px; }
+  .stat .s { font-size: 12px; color: var(--mut); margin-top: 4px; }
+  .ph { display: flex; align-items: center; gap: 12px; margin: 4px 2px 15px; }
+  .ph h2 { margin: 0; font-size: 22px; color: var(--ink); }
+  .filters { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; background: var(--bg); border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); }
+  .filters label { display: block; font: 700 11px 'Segoe UI'; color: var(--mut); text-transform: uppercase; margin-bottom: 6px; margin-left: 5px; }
+  .filters input { border: none; border-radius: 10px; background: var(--bg); padding: 10px 12px; font-size: 14px; outline: none; box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); color: var(--ink); }
+  .filters input:focus { box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light), 0 0 0 2px var(--br); }
+  .filters .fg { flex: 1; min-width: 200px; }
+  .filters .fg input { width: 100%; font-family: var(--urdu); font-size: 16px; padding: 8px 12px; line-height: 2.0; min-height: 44px; }
+  .acc { background: var(--bg); border-radius: 16px; margin-bottom: 15px; overflow: hidden; box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); }
+  .acc summary { list-style: none; cursor: pointer; padding: 16px 12px 16px 26px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc summary::before { content: '▸'; color: var(--br); font-size: 16px; transition: .15s; position: absolute; left: 8px; top: 18px; }
+  .acc[open] summary::before { transform: rotate(90deg); }
+  .acc[open] summary { border-bottom: 1px solid var(--ln); }
+  
+  .acc-top { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px; row-gap: 6px; flex-wrap: wrap; min-height: 28px; }
+  .acc-btns { display: flex; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; align-items: center; }
+  .acc-top::-webkit-scrollbar { display: none; }
+  
+  .acc-mid { font-family: var(--urdu); font-size: 17px; color: var(--ink); line-height: 2.2; padding: 2px 0; word-break: break-word; }
+  .acc-bot { color: var(--mut); font-size: 12px; }
+  .acc[open] .acc-item { display: none; }
+  mark.hl { background: #fde047; color: #111; border-radius: 3px; padding: 0 2px; }
+  .pill { display: inline-block; padding: 5px 12px; border-radius: 999px; font: 700 12px 'Segoe UI'; background: var(--bg); box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); color: var(--br); white-space: nowrap; }
+  .pill.ok { color: #10b981; }
+  .pill.w { color: #f59e0b; }
+  .pill.prog { color: #8b5cf6; background: #f3e8ff; box-shadow: none; border: 1px solid #d8b4fe; }
+  .mini { border: none; cursor: pointer; font: 700 12px 'Segoe UI'; padding: 6px 10px; border-radius: 8px; background: var(--bg); color: #dc3545; box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light); }
+  .mini:active { box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light); }
+  table.items { border-collapse: collapse; width: 100%; min-width: 700px; }
+  table.items th { background: var(--bg); color: var(--ink); font-size: 12px; text-transform: uppercase; padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--t-border); border-right: 1px solid var(--t-border); white-space: nowrap; }
+  table.items td { padding: 8px 12px; border-bottom: 1px solid var(--t-border); border-right: 1px solid var(--t-border); vertical-align: middle; }
+  table.items th:last-child, table.items td:last-child { border-right: 0; }
+  table.items tr:last-child td { border-bottom: 0; }
+  table.items .u { font-family: var(--urdu); font-size: 16px; direction: rtl; text-align: right; line-height: 2.0; padding: 4px 0; white-space: pre-wrap; color: var(--ink); }
+  table.items .ck { width: 46px; text-align: center; }
+  table.items input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--br); cursor: pointer; }
+  .empty { text-align: center; color: var(--mut); padding: 40px 10px; background: var(--bg); border-radius: 16px; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+  .toast { display: flex; align-items: center; gap: 12px; max-width: 92vw; }
+  .toast .w7 { width: 22px; height: 22px; flex: none; box-sizing: border-box; border-radius: 50%; border: 3px solid rgba(76,194,255,.25); border-top-color: #38b6ff; border-right-color: #8fdcff; box-shadow: 0 0 6px rgba(41,168,255,.6); animation: w7spin .9s linear infinite; will-change: transform; }
+  html.gen #bflyLayer, html.nobfly #bflyLayer { display: none; }
+  @keyframes w7spin { to { transform: rotate(360deg); } }
+  .n-btn.ibtn { display: inline-flex; align-items: center; }
+  .bi { display: inline-flex; margin-right: 7px; }
+  .bi svg { width: 18px; height: 18px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #pArea { position: absolute; left: -99999px; top: 0; width: 210mm; background: #fff; color: #000; }
+  #pIn { width: 595.3pt; padding-top: 34pt; font-family: Calibri, 'Segoe UI', Arial; font-size: 11pt; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #pIn table { border-collapse: collapse; table-layout: fixed; }
+  #pIn td, #pIn th { border: .6pt solid #000; padding: 0 5.4pt; }
+  .sh { width: 536.9pt; margin: 0 auto; }
+  #pIn table.wh { width: 536.9pt; border-collapse: separate; border-spacing: 0; border-left: .6pt solid #000; border-top: .6pt solid #000; }
+  #pIn .wh td { border-left: 0; border-top: 0; font-size: 10pt; text-align: center; vertical-align: middle; }
+  .wh .logo { padding: 0; vertical-align: top; }
+  .wh .logo img { display: block; width: 37pt; height: 33pt; margin: 20pt 0 0 19pt; }
+  .wh .big { font-size: 18pt; font-weight: 700; }
+  .wmeta { position: relative; margin-left: 0; padding: 22.6pt 0 0 4pt; height: 56pt; font-size: 12pt; font-weight: 700; line-height: 16.8pt; white-space: nowrap; }
+  .wmeta .c { position: absolute; left: 50%; top: 22.6pt; transform: translateX(-50%); }
+  .wmeta .c .f { min-width: 100pt; max-width: 110pt; justify-content: center; unicode-bidi: plaintext; padding-bottom: 1pt; border-bottom: none; }
+  .wmeta .d { position: absolute; right: 4pt; left: auto; top: 22.6pt; }
+  .f { 
+    display: inline-flex; 
+    align-items: flex-end; 
+    justify-content: flex-end; 
+    min-width: 111pt; 
+    max-width: 215pt;
+    border-bottom: .8pt solid #000; 
+    box-sizing: border-box;
+    height: 32pt; 
+    padding: 2pt 4pt 6pt 4pt; 
+    white-space: nowrap; 
+    font-family: var(--urdu); 
+    font-weight: 400; 
+    font-size: 12pt; 
+    line-height: 1.9;
+    direction: rtl; 
+  }
+  .wmeta .d .f { min-width: 100pt; max-width: 110pt; direction: ltr; justify-content: center; font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; padding-bottom: 1pt; }
+  .wgrid { margin-left: 0; }
+  .wgrid th { line-height: 1.22; padding: 0; white-space: nowrap; text-align: center; vertical-align: middle; font-weight: 700; }
+  .wgrid td { vertical-align: top; }
+  .wgrid td.n { text-align: center; font-size: 18pt; line-height: 1.22; padding: 0; }
+  .wgrid td .t { font-family: var(--urdu); font-size: 12pt; line-height: 2.1; direction: rtl; text-align: right; white-space: pre-wrap; overflow-wrap: anywhere; padding: 2pt 0; }
+  .wnote { text-align: center; font-size: 16pt; height: 32pt; line-height: 1.4; }
+  .wsign { margin-left: 0; width: 100%; background: transparent; font-size: 11pt; font-weight: 700; line-height: 26pt; display: flex; justify-content: space-between; white-space: nowrap; padding: 0 6pt; box-sizing: border-box; }
+  /* ===== Header: icon buttons row ===== */
+  .app-bar .hbtns { flex: 1 1 100%; display: flex; gap: 10px; align-items: center; }
+  .n-btn.ic { padding: 8px 14px; font-size: 17px; line-height: 1.2; }
+  /* ===== Write screen raised buttons ===== */
+  .n-btn.raise { background-image: linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,0) 60%); box-shadow: 5px 7px 12px rgba(0,0,0,.28), -3px -3px 8px rgba(255,255,255,.7), inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.2); transition: transform .12s, box-shadow .12s; }
+  .n-btn.raise:active { transform: translateY(3px); box-shadow: inset 3px 3px 7px rgba(0,0,0,.3), inset -2px -2px 6px rgba(255,255,255,.25), 0 1px 2px rgba(0,0,0,.2); }
+  .n-btn.raise.wa { background-color: #25D366; color: #fff; display: inline-flex; align-items: center; }
+  .wi { display: inline-flex; margin-right: 7px; }
+  .wi svg { width: 18px; height: 18px; display: block; }
+  .n-btn.raise.gm { background-color: #ea4335; color: #fff; display: inline-flex; align-items: center; }
+  .gi { display: inline-flex; background: #fff; border-radius: 6px; padding: 2px; margin-right: 7px; }
+  .gi svg { width: 18px; height: 18px; display: block; }
+  /* ===== Date filter ===== */
+  .filters .dg { flex: 1 1 260px; }
+  .filters .dr { display: flex; gap: 10px; }
+  .filters .df { display: flex; flex-direction: column; flex: 1 1 0; min-width: 0; }
+  .filters .df span { font: 700 11px 'Segoe UI'; color: var(--mut); text-transform: uppercase; margin: 0 0 4px 5px; }
+  .filters .df input { width: 100%; min-width: 0; font-size: 13px; padding: 10px 8px; }
+  /* ===== Mobile: card buttons in one row ===== */
+  @media (max-width: 480px) {
+    .acc-top { gap: 6px; }
+    .acc-btns { gap: 4px; }
+    .acc-top .pill { padding: 5px 9px; font-size: 11px; }
+    .acc-top .mini { padding: 6px 8px; font-size: 11px; }
+    .acc-top .mini.edit { padding: 5px 8px; font-size: 13px; }
+  }
+  /* ===== Settings / exit popups ===== */
+  #settingsOv, #exitOv, #outOv { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 60; display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .sm-card { background: var(--bg); width: 100%; max-width: 440px; max-height: 92vh; display: flex; flex-direction: column; border-radius: 22px; box-shadow: 10px 10px 30px rgba(0,0,0,.3); overflow: hidden; }
+  .sm-h { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--ln); }
+  .sm-h h2 { font-size: 18px; color: var(--ink); }
+  .sm-body { padding: 14px 18px; overflow-y: auto; }
+  .sm-body h3 { font-size: 12px; color: var(--mut); text-transform: uppercase; letter-spacing: .8px; margin: 6px 0 10px; }
+  .sm-row { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+  .sm-pv { flex: 0 0 auto; width: 72px; height: 72px; border-radius: 14px; background: var(--bg); display: grid; place-items: center; overflow: hidden; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+  .sm-pv img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  .sm-pv.round { border-radius: 50%; }
+  .sm-pv.round img { width: 100%; height: 100%; object-fit: cover; max-width: none; max-height: none; }
+  .sm-pv.sign { width: 100%; height: 64px; border-radius: 12px; }
+  .sm-tx b { display: block; font-size: 14px; color: var(--ink); }
+  .sm-tx small { display: block; font-size: 11.5px; color: var(--mut); margin: 2px 0 8px; }
+  .sm-bt { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sm-bt .n-btn { padding: 7px 12px; font-size: 12.5px; }
+  .sm-sign { margin-bottom: 18px; }
+  .sm-sign > b { display: block; font-size: 14px; color: var(--ink); margin-bottom: 8px; }
+  .sm-sign .sm-pv { margin-bottom: 10px; }
+  .seg { display: flex; gap: 8px; margin-bottom: 10px; }
+  .seg button { flex: 1; border: none; cursor: pointer; padding: 8px 4px; border-radius: 10px; font: 600 12.5px 'Segoe UI'; background: var(--bg); color: var(--mut); box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light); }
+  .seg button.on { color: var(--br); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
+  .sm-in { width: 100%; border: none; outline: none; border-radius: 10px; background: var(--bg); padding: 10px 12px; font-size: 14px; color: var(--ink); box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); margin-bottom: 10px; }
+  .sm-ft { padding: 12px 18px; border-top: 1px solid var(--ln); text-align: right; }
+  .sn-pv { font-family: 'Dancing Script', 'Segoe Script', 'Brush Script MT', 'Lucida Handwriting', cursive; font-weight: 600; font-size: 26px; color: #14213d; white-space: nowrap; }
+  .exit-p { padding: 24px 20px 8px; font-size: 16px; color: var(--ink); text-align: center; line-height: 1.5; }
+  .exit-b { display: flex; gap: 12px; justify-content: center; padding: 16px 20px 22px; }
+  .exit-b .n-btn { min-width: 90px; }
+  /* ===== PDF signatures ===== */
+  .wsign .sl { position: relative; display: inline-block; }
+  .wsign .sv { position: absolute; left: 0; right: 0; bottom: 6pt; display: flex; justify-content: center; align-items: flex-end; pointer-events: none; }
+  .wsign .sv img { max-height: 30pt; max-width: 100%; object-fit: contain; display: block; }
+  .wsign .sn { font-family: 'Dancing Script', 'Segoe Script', 'Brush Script MT', 'Lucida Handwriting', cursive; font-weight: 600; font-size: 17pt; line-height: 1; color: #14213d; white-space: nowrap; }
+  .wh .logo img.custom { object-fit: contain; }
+  [hidden] { display: none !important; }
+  @media (max-width: 700px) { .meta { grid-template-columns: 1fr; } .sc, .meta, .ft, .ch { margin-left: 10px; margin-right: 10px; } }
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; width: 210mm !important; height: 297mm !important; min-height: auto !important; display: block !important; overflow: hidden !important; }
+    .app-bar, .wrap, .toast, #auth-wrapper { display: none !important; }
+    #pArea { position: static !important; left: auto !important; margin: 0 auto !important; width: 210mm !important; height: 297mm !important; overflow: hidden !important; display: block !important; }
+  }
+  .fon { color: #10b981; font-size: 11px; font-weight: 700; margin-left: 6px; }
+  .sm-hint { display: block; font-size: 11.5px; color: var(--mut); margin: -4px 0 12px; line-height: 1.5; }
+  .sm-fp { width: 100%; min-height: 64px; border-radius: 12px; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 6px 12px; margin-bottom: 10px; font-size: 20px; line-height: 1.9; direction: rtl; color: var(--ink); box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+  /* ===== Smooth view change ===== */
+  .wrap:not([hidden]) { animation: viewIn .2s ease-out; }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  /* ===== Butterflies ===== */
+  #bflyLayer { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 55; }
+  .bfly { position: absolute; left: 0; top: 0; width: 22px; height: 22px; will-change: transform; backface-visibility: hidden; }
+  .bfly svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .bfly .wings { transform-box: view-box; transform-origin: 50% 50%; animation: bflap 2.6s linear infinite; will-change: transform; }
+  @keyframes bflap {
+    0%,100% { transform: scaleX(.95); }
+    4% { transform: scaleX(.15); } 8% { transform: scaleX(.95); } 12% { transform: scaleX(.15); } 16% { transform: scaleX(.95); }
+    20% { transform: scaleX(.15); } 24% { transform: scaleX(.95); } 28% { transform: scaleX(.15); } 32% { transform: scaleX(.95); }
+    36% { transform: scaleX(.15); } 40% { transform: scaleX(.95); } 44% { transform: scaleX(.15); } 48% { transform: scaleX(.95); }
+    52% { transform: scaleX(.15); } 56% { transform: scaleX(.95); } 60% { transform: scaleX(.88); } 80% { transform: scaleX(.95); }
+  }
+  @media print { #bflyLayer { display: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="auth-wrapper">
+  <div class="auth-card" id="login-section">
+      <div class="icon-container">🔐</div>
+      <div class="header-text"><h2>Welcome Back</h2><p>Login to access THE BKRY Forms</p></div>
+      <form onsubmit="event.preventDefault(); loginUser();">
+          <div class="input-group"><label>Email Address</label><div class="input-wrapper"><input type="email" id="login-email" placeholder="Enter your email" required></div></div>
+          <div class="input-group"><label>Password</label><div class="input-wrapper"><input type="password" id="login-password" placeholder="Enter your password" required><span class="toggle-password" onclick="togglePassword('login-password', this)">👁️</span></div></div>
+          <div class="options"><label><input type="checkbox" checked> Remember me</label><a href="#">Forgot Password?</a></div>
+          <button type="submit" class="action-btn">LOGIN</button>
+      </form>
+      <div class="footer-text"><span>Don't have an account?</span><button class="add-btn" onclick="switchToSignup()">+</button></div>
+  </div>
+  <div class="auth-card" id="signup-section">
+      <div class="icon-container">👤</div>
+      <div class="header-text"><h2>Create Account</h2><p>Sign up to get started</p></div>
+      <form onsubmit="event.preventDefault(); signupUser();">
+          <div class="input-group"><label>Full Name</label><div class="input-wrapper"><input type="text" id="signup-name" placeholder="Enter your name" required></div></div>
+          <div class="input-group"><label>Email Address</label><div class="input-wrapper"><input type="email" id="signup-email" placeholder="Enter your email" required></div></div>
+          <div class="input-group"><label>Password</label><div class="input-wrapper"><input type="password" id="signup-password" placeholder="Create a password" minlength="6" required><span class="toggle-password" onclick="togglePassword('signup-password', this)">👁️</span></div></div>
+          <div class="options"><label><input type="checkbox" required> I agree to the <a href="#">Terms</a></label></div>
+          <button type="submit" class="action-btn">SIGN UP</button>
+      </form>
+      <div class="footer-text"><span>Already have an account?</span><a onclick="switchToLogin()">Login</a></div>
+  </div>
+</div>
+
+<div id="app-wrapper">
+  <header class="app-bar">
+    <div class="dot" style="overflow:hidden;padding:0"><img id="hdrLogo" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>
+    <div><h1>Demand Form</h1><small>Demand and complaint forms records</small></div>
+    <div class="sp"></div>
+    <button class="n-btn d" onclick="askLogout()">🚪 Logout</button>
+    <div class="hbtns">
+      <button class="n-btn ic" onclick="openSettings()" title="Settings" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+  <div class="wrap" id="v-home"></div>
+  <div class="wrap" id="v-write" hidden><nav class="tabs" id="tabs"></nav><section class="card" id="card"></section></div>
+  <div class="wrap" id="v-pending" hidden></div>
+  <div class="wrap" id="v-received" hidden></div>
+  <div class="wrap" id="v-total" hidden></div>
+</div>
+
+<div id="settingsOv" hidden onclick="if(event.target===this)closeSettings()">
+  <div class="sm-card">
+    <div class="sm-h"><h2>⚙️ Settings</h2><button class="n-btn" onclick="closeSettings()">✕</button></div>
+    <div class="sm-body" id="smBody"></div>
+    <div class="sm-ft"><button class="n-btn p" onclick="closeSettings()">Done</button></div>
+  </div>
+</div>
+<div id="exitOv" hidden>
+  <div class="sm-card" style="max-width:320px">
+    <div class="exit-p">Kya aap app band karna chahte hain?</div>
+    <div class="exit-b"><button class="n-btn d" onclick="exitYes()">Yes</button><button class="n-btn p" onclick="hideExit()">No</button></div>
+  </div>
+</div>
+<div id="outOv" hidden>
+  <div class="sm-card" style="max-width:320px">
+    <div class="exit-p">Kya aap logout karna chahte hain?</div>
+    <div class="exit-b"><button class="n-btn d" onclick="logoutYes()">Yes</button><button class="n-btn p" onclick="hideLogoutAsk()">No</button></div>
+  </div>
+</div>
+<input type="file" id="fileIn" accept="image/*" hidden>
+<div class="toast" id="toast"></div>
+<div id="pArea"><div id="pIn"></div></div>
+
+<script>
+var appActive=false,guardOn=false,navDepth=0,skipPop=0,modalOpen=false;
+/* ============ AUTH ============ */
+var authStorage={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},remove:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+function applyView(isPc){document.getElementById('vp').setAttribute('content',isPc?'width=1100':'width=device-width, initial-scale=1')}
+function updateViewport(isAppActive){applyView(isAppActive&&authStorage.get('bkry_view')==='pc')}
+function switchToSignup(){document.getElementById('login-section').style.display='none';document.getElementById('signup-section').style.display='block'}
+function switchToLogin(){document.getElementById('signup-section').style.display='none';document.getElementById('login-section').style.display='block'}
+// ==========================================
+// FIREBASE AUTH & SYNC
+// ==========================================
+var firebaseConfig = {
+  apiKey: "AIzaSyAV5S6WS1yd9JwzMWmtxLyOzkmnBE5Ox5I",
+  authDomain: "demand-forms.firebaseapp.com",
+  projectId: "demand-forms",
+  storageBucket: "demand-forms.firebasestorage.app",
+  messagingSenderId: "124546429030",
+  appId: "1:124546429030:web:d9c1216699d6e45d997da7"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+var auth = firebase.auth();
+var db = firebase.firestore();
+try { db.enablePersistence({synchronizeTabs:true}); } catch(e) {}
+
+function loginUser(){
+  var email=document.getElementById('login-email').value;
+  var pass=document.getElementById('login-password').value;
+  toast('Logging in…');
+  auth.signInWithEmailAndPassword(email,pass).catch(function(e){toast(e.message)});
+}
+
+function signupUser(){
+  var name=document.getElementById('signup-name').value;
+  var email=document.getElementById('signup-email').value;
+  var pass=document.getElementById('signup-password').value;
+  toast('Creating account…');
+  auth.createUserWithEmailAndPassword(email,pass).then(function(cred){
+    return db.collection('users').doc(cred.user.uid).set({
+      profile:{name:name,email:email,createdAt:new Date().toISOString()}
+    },{merge:true});
+  }).then(function(){ toast('Account Created ✓'); }).catch(function(e){toast(e.message)});
+}
+
+function logoutUser(){
+  var nv=navDepth;guardOn=false;navDepth=0;appActive=false;
+  if(nv>0){try{history.go(-nv)}catch(e){}}
+  auth.signOut().then(function(){toast('Logged out')}).catch(function(e){toast(e.message)});
+}
+
+auth.onAuthStateChanged(function(user){
+  if(user){
+    currentUser=user;
+    document.getElementById('auth-wrapper').style.display='none';
+    document.getElementById('app-wrapper').style.display='flex';
+    applyView(authStorage.get('bkry_view')==='pc');
+    appActive=true;
+    
+    setTimeout(function(){
+      if (typeof loadFromCloud === 'function') {
+        loadFromCloud().then(function(){ show('home'); });
+      } else {
+        show('home');
+      }
+    }, 150);
+
+  } else {
+    currentUser=null;
+    document.getElementById('app-wrapper').style.display='none';
+    document.getElementById('auth-wrapper').style.display='flex';
+    updateViewport(false);switchToLogin();
+  }
+});
+  /* ============ APP ============ */
+var storage={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+function setViewMode(isPc){authStorage.set('bkry_view',isPc?'pc':'mobile');applyView(isPc);renderSettings()}
+/* ============ BACKUP / RESTORE ============ */
+var BK_SKIP={bkry_logged_in:1,bkry_view:1};
+function backupData(){
+  try{
+    var out={},n=0;
+    for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('bkry_')===0&&!BK_SKIP[k]){out[k]=localStorage.getItem(k);n++}}
+    if(!n){toast('Backup ke liye koi data nahi mila');return}
+    var d=new Date(),p2=function(x){return String(x).padStart(2,'0')};
+    var name='BKRY_Demand_Backup_'+d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'_'+p2(d.getHours())+p2(d.getMinutes())+'.json';
+    var blob=new Blob([JSON.stringify({app:'bkry-demand-forms',v:1,date:d.toISOString(),data:out})],{type:'application/json'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
+    toast('Backup download ho gaya ✓');
+  }catch(e){toast('Backup nahi ban saka')}
+}
+function restoreData(){
+  var f=document.createElement('input');f.type='file';f.accept='.json,application/json';
+  f.onchange=function(){
+    var file=f.files&&f.files[0];if(!file)return;
+    var r=new FileReader();
+    r.onerror=function(){toast('File parh nahi saka')};
+    r.onload=function(){
+      var o;try{o=JSON.parse(r.result)}catch(e){toast('Yeh sahi backup file nahi hai');return}
+      if(!o||o.app!=='bkry-demand-forms'||!o.data||typeof o.data!=='object'){toast('Yeh sahi backup file nahi hai');return}
+      var keys=Object.keys(o.data).filter(function(k){return k.indexOf('bkry_')===0&&!BK_SKIP[k]&&typeof o.data[k]==='string'});
+      if(!keys.length){toast('Backup mein data nahi hai');return}
+      if(!confirm('Backup wala data is app ke maujooda data ki jagah aa jaye ga. Jari rakhen?'))return;
+      try{keys.forEach(function(k){localStorage.setItem(k,o.data[k])})}catch(e){toast('Storage full — restore poora nahi hua');return}
+      toast('Restore ho gaya ✓');setTimeout(function(){location.reload()},700);
+    };
+    r.readAsText(file);
+  };
+  f.click();
+}
+
+var PAGES=[{type:'demand',title:'DEMAND FOR TECHNICIAN',tab:'Demand',def:15},{type:'complaint',title:'COMPLAINT OF TECHNICIAN',tab:'Complaint',def:10}];
+var COLS={demand:['ITEM','IN STORE','DEMAND','REMARKS'],complaint:['ITEM','QUANTITY','REMARKS']};
+var SW={demand:['8%','40%','16%','16%','20%'],complaint:['60px','500px','140px','220px']};
+var MAX=120;
+
+var SK='bkry_tech_form_v1',data={};
+try{data=JSON.parse(storage.get(SK)||'{}')||{}}catch(e){data={}}
+if(typeof data!=='object'||!data)data={};
+function save(){try{if(typeof editingId!=='undefined')data.__edit=editingId;storage.set(SK,JSON.stringify(data))}catch(e){toast('Storage full')}}
+var active=parseInt(data.__active||0,10);
+if(isNaN(active)||active<0||active>=PAGES.length)active=0;
+
+/* Edit state */
+var editingId = (data.__edit!==undefined&&data.__edit!==null)?data.__edit:null;
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function pad(n){return(n<10?'0':'')+n+'.'}
+function isBlank(it){return!it||typeof it.item!=='string'||it.item.trim()===''}
+function autoRows(p,d){var m=d,re=new RegExp('^'+p+'_(\\d+)_');Object.keys(data).forEach(function(k){var x=k.match(re);if(x){var r=parseInt(x[1],10)+1;if(r>m)m=r}});return m}
+function rowCount(p){var n=parseInt(data['rows_'+p],10);if(isNaN(n))n=autoRows(p,PAGES[p].def);return Math.max(1,Math.min(MAX,n))}
+function setRows(n){n=parseInt(n,10);if(isNaN(n))n=rowCount(active);n=Math.max(1,Math.min(MAX,n));var c=rowCount(active);if(n<c){for(var r=n;r<c;r++)for(var i=0;i<4;i++){delete data[active+'_'+r+'_'+i];delete data[active+'_'+r+'_'+i+'_f']}}data['rows_'+active]=n;save();renderForm()}
+function addRow(){setRows(rowCount(active)+1)}
+function removeRow(){setRows(rowCount(active)-1)}
+function grow(el){if(!el||el.tagName!=='TEXTAREA')return;el.style.height='auto';el.style.height=Math.max(66,el.scrollHeight)+'px'}
+function growAll(){requestAnimationFrame(function(){var l=document.querySelectorAll('textarea.ur'),h=[],i;for(i=0;i<l.length;i++)l[i].style.height='auto';for(i=0;i<l.length;i++)h[i]=l[i].scrollHeight;for(i=0;i<l.length;i++)l[i].style.height=Math.max(66,h[i])+'px'})}
+
+function renderTabs(){document.getElementById('tabs').innerHTML=PAGES.map(function(pg,i){return '<button class="chip'+(i===active?' on':'')+'" onclick="selectForm('+i+')">'+pg.tab+'</button>'}).join('')}
+function selectForm(i){
+  if (editingId !== null) { editingId = null; toast('Edit mode cancelled'); }
+  active=i;data.__active=i;lastInput=null;save();renderTabs();renderForm();
+}
+function getTodayLocal(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+
+function renderForm(){
+  var p=active,pg=PAGES[p],cols=COLS[pg.type],w=SW[pg.type],total=rowCount(p);
+  var cg='<colgroup>'+w.map(function(x){return '<col style="width:'+x+'">'}).join('')+'</colgroup>';
+  var th='<th class="sr">SR#</th>'+cols.map(function(c){return '<th>'+c+'</th>'}).join('');
+  var defBranch="تہذیب بیکرز-G9";
+  var defDate=getTodayLocal();
+  var valBranch=(data[p+'_branch']!==undefined)?data[p+'_branch']:defBranch;
+  var valDate=(data[p+'_date']!==undefined)?data[p+'_date']:defDate;
+  var rows='';
+  for(var r=0;r<total;r++){
+    var tds='<td class="sr">'+pad(r+1)+'</td>';
+    for(var c=0;c<cols.length;c++){
+      var k=p+'_'+r+'_'+c;
+      tds+='<td><textarea class="ur" rows="1" dir="rtl" lang="ur" data-k="'+k+'"'+fAttr(data[k]?data[k+'_f']:'')+'>'+esc(data[k]||'')+'</textarea></td>';
+    }
+    rows+='<tr>'+tds+'</tr>';
+  }
+
+  /* Date input is NO LONGER read-only */
+  document.getElementById('card').innerHTML=
+    '<div class="ch"><div><h2>'+pg.title+'</h2><p>DFT-AD-004 · Issue 04 · multi-line cells · PDF 1 page</p></div>'+
+    '<div class="hr">'+
+      '<label class="rn">Rows <input type="number" min="1" max="'+MAX+'" value="'+total+'" onchange="setRows(this.value)"></label>'+
+      '<span class="bdg">'+total+' rows</span>'+
+      '<button class="n-btn p raise ibtn" onclick="saveToPending()"><span class="bi">'+SAVE_SVG+'</span>Save to Pending</button>'+
+      '<button class="n-btn raise gm" onclick="shareViaGmail()"><span class="gi">'+GMAIL_SVG+'</span>Share Gmail</button>'+
+      '<button class="n-btn p raise ibtn" onclick="downloadPdf()"><span class="bi">'+PDF_SVG+'</span>Download PDF</button>'+
+      '<button class="n-btn raise wa" onclick="shareFormWhatsApp()"><span class="wi">'+WA_SVG+'</span>WhatsApp share</button>'+
+    '</div></div>'+
+    '<div class="meta"><div class="fld"><label>Branch Name</label><input dir="auto" lang="ur" data-k="'+p+'_branch"'+fAttr(valBranch?data[p+'_branch_f']:'')+' value="'+esc(valBranch)+'"></div>'+
+    '<div class="fld"><label>Send To (PDF centre)</label><input dir="auto" lang="ur" style="text-align:center'+fFam(data[p+'_sendto']?data[p+'_sendto_f']:'')+'" placeholder="Khali = PDF mein nahi aayega" data-k="'+p+'_sendto" value="'+esc(data[p+'_sendto']||'')+'"></div>'+
+    '<div class="fld"><label>Date</label><input type="date" data-k="'+p+'_date" value="'+esc(valDate)+'"></div></div>'+
+    '<div class="sc"><table class="g" style="width:100%; table-layout:fixed;">'+cg+'<thead><tr>'+th+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="ft"><span class="hint">↔ Table vertical & horizontal scroll · cell auto-grows</span>'+
+    '<div><button class="n-btn" onclick="addRow()">+ Row</button> <button class="n-btn" onclick="removeRow()">− Row</button> <button class="n-btn d" onclick="clearForm()">Clear</button></div></div>';
+  growAll();
+}
+
+function clearForm(){if(!confirm('Yeh form saaf kar den?'))return;clearNow()}
+function clearNow(){
+  var pre=active+'_';
+  Object.keys(data).forEach(function(k){if(k.indexOf(pre)===0)delete data[k]});
+  lastInput=null;
+  editingId=null;
+  save();renderForm();
+}
+
+var lastInput=null;
+document.addEventListener('input',function(e){
+  var t=e.target,k=t.getAttribute&&t.getAttribute('data-k');
+  if(k){
+    data[k]=t.value;if(t.value==='')delete data[k+'_f'];save();
+    var parts=k.split('_');
+    if(parts.length===3&&parts[0]==='0'&&parts[2]==='0'&&t.value.trim()!==''){
+      var row=parts[1],inStoreKey=parts[0]+'_'+row+'_1',currentInStore=data[inStoreKey]||'';
+      if(currentInStore.trim()===''){
+        data[inStoreKey]='Nill';save();
+        var el=document.querySelector('textarea[data-k="'+inStoreKey+'"]');
+        if(el){el.value='Nill';el.style.height='auto';el.style.height=Math.max(66,el.scrollHeight)+'px'}
+      }
+    }
+    if(parts.length===3&&parts[0]==='0'&&parts[2]==='0'&&t.value.trim()===''){
+      var sk=parts[0]+'_'+parts[1]+'_1';
+      if(data[sk]==='Nill'){
+        delete data[sk];delete data[sk+'_f'];save();
+        var el2=document.querySelector('textarea[data-k="'+sk+'"]');
+        if(el2){el2.value='';el2.style.height='auto';el2.style.height=Math.max(66,el2.scrollHeight)+'px'}
+      }
+    }
+  }
+  if(t.classList&&t.classList.contains('ur'))grow(t);
+});
+document.addEventListener('focusin',function(e){if(e.target.matches&&e.target.matches('[data-k]'))lastInput=e.target});
+document.addEventListener('focusout',function(e){if(e.target===lastInput)lastInput=null});
+
+var LOGO='data:image/jpeg;base64,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';
+var WA_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="2" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path stroke-width="2.6" transform="translate(6.6 6.4) scale(.45)" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+var SAVE_SVG='<svg viewBox="0 0 24 24"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><path d="M7 21v-7h10v7"/></svg>';
+var PDF_SVG='<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6"/><path d="M9.5 14.5L12 17l2.5-2.5"/></svg>';
+var GMAIL_SVG='<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#4caf50" d="M45 16.2l-5 2.75-5 4.75V40h7c1.657 0 3-1.343 3-3V16.2z"/><path fill="#1e88e5" d="M3 16.2l3.614 1.71L13 23.7V40H6c-1.657 0-3-1.343-3-3V16.2z"/><polygon fill="#e53935" points="35,11.2 24,19.45 13,11.2 12,17 13,23.7 24,31.95 35,23.7 36,17"/><path fill="#c62828" d="M3 12.298V16.2l10 7.5V11.2L9.876 8.859C9.132 8.301 8.228 8 7.298 8 4.924 8 3 9.924 3 12.298z"/><path fill="#fbc02d" d="M45 12.298V16.2l-10 7.5V11.2l3.124-2.341C38.868 8.301 39.772 8 40.702 8 43.076 8 45 9.924 45 12.298z"/></svg>';
+var ICO_R='<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><polygon points="18,4 31,10 18,16 5,10" fill="#f6cf8a"/><polygon points="5,10 18,16 18,31 5,25" fill="#e0a23f"/><polygon points="31,10 18,16 18,31 31,25" fill="#c98a2b"/><path d="M11.5 7 L24.5 13" stroke="#b9791f" stroke-width="2" stroke-linecap="round"/><circle cx="27" cy="27" r="8" fill="#10b981" stroke="#fff" stroke-width="2"/><path d="M23.2 27.2 L26 30 L31 24.2" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var ICO_T='<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gTot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><rect x="3" y="3" width="30" height="30" rx="8" fill="url(#gTot)"/><rect x="8.5" y="19" width="5" height="9" rx="1.5" fill="#fff" opacity=".85"/><rect x="15.5" y="14" width="5" height="14" rx="1.5" fill="#fff" opacity=".92"/><rect x="22.5" y="8.5" width="5" height="19.5" rx="1.5" fill="#fff"/></svg>';
+
+/* ============ UI SETTINGS: butterfly + Urdu font ============ */
+var FONTS={noto:"'Noto Nastaliq Urdu','Jameel Noori Nastaleeq','Segoe UI',Tahoma,serif",sys:"sans-serif"};
+function urFont(){return storage.get('bkry_ufont')==='sys'?'sys':'noto'}
+function fFam(tag){return(tag&&FONTS[tag]&&tag!==urFont())?';font-family:'+FONTS[tag]:''}
+function fAttr(tag){var f=fFam(tag);return f?' style="'+f.slice(1)+'"':''}
+function ufa(it,n){return fAttr(it&&it.fm&&String(it[n]||'').trim()!==''?it.fm[n]:'')}
+function applyUFont(){var st=document.getElementById('urduFontVar');if(!st){st=document.createElement('style');st.id='urduFontVar';document.head.appendChild(st)}st.textContent='html:root{--urdu:'+FONTS[urFont()]+'}'}
+function bflyOn(){return storage.get('bkry_bfly')!=='off'}
+function applyBfly(){document.documentElement.classList.toggle('nobfly',!bflyOn())}
+function setBfly(on){storage.set('bkry_bfly',on?'on':'off');applyBfly();renderSettings();toast(on?'Butterfly ON ✓':'Butterfly OFF ✓')}
+applyUFont();applyBfly();
+
+function cellFm(p,r,type){
+  var names=type==='demand'?['item','inStore','demand','remarks']:['item','inStore','remarks'],fm={},any=false;
+  names.forEach(function(n,c){var k=p+'_'+r+'_'+c;if(String(data[k]||'').trim()!==''&&data[k+'_f']){fm[n]=data[k+'_f'];any=true}});
+  return any?fm:null;
+}
+function loadFm(idx,r,it){
+  if(!it||!it.fm)return;
+  var names=idx===0?['item','inStore','demand','remarks']:['item','inStore','remarks'];
+  names.forEach(function(n,c){if(it.fm[n]&&String(it[n]||'').trim()!=='')data[idx+'_'+r+'_'+c+'_f']=it.fm[n]});
+}
+function clearFontTags(){
+  Object.keys(data).forEach(function(k){if(/^\d+_.*_f$/.test(k))delete data[k]});
+  demands.forEach(function(d){delete d.bf;delete d.sf;(d.items||[]).forEach(function(it){delete it.fm})});
+}
+function tagExisting(old){
+  Object.keys(data).forEach(function(k){
+    if(/^\d+_\d+_\d+$/.test(k)&&String(data[k]||'').trim()!==''&&!data[k+'_f'])data[k+'_f']=old;
+  });
+  PAGES.forEach(function(pg,p){
+    var b=data[p+'_branch'],bv=(b!==undefined)?b:'تہذیب بیکرز-G9';
+    if(String(bv).trim()!==''&&!data[p+'_branch_f'])data[p+'_branch_f']=old;
+    var sv=data[p+'_sendto'];
+    if(sv&&String(sv).trim()!==''&&!data[p+'_sendto_f'])data[p+'_sendto_f']=old;
+  });
+  demands.forEach(function(d){
+    if(!d.bf&&String(d.branch||'').trim()!=='')d.bf=old;
+    if(!d.sf&&String(d.sendTo||'').trim()!=='')d.sf=old;
+    (d.items||[]).forEach(function(it){
+      var fm=it.fm||{},ch=false;
+      ['item','inStore','demand','remarks'].forEach(function(f){if(String(it[f]||'').trim()!==''&&!fm[f]){fm[f]=old;ch=true}});
+      if(ch)it.fm=fm;
+    });
+  });
+}
+function setUFont(id,mode){
+  var old=urFont();
+  if(mode==='all'){
+    clearFontTags();
+    storage.set('bkry_ufont',id);
+  }else{
+    if(id===old){toast('Yeh font pehle se active hai');return}
+    tagExisting(old);
+    storage.set('bkry_ufont',id);
+  }
+  applyUFont();save();saveDemands();renderSettings();
+  renderForm();
+  if(view==='pending'||view==='received'||view==='total')renderList(view);
+  toast(mode==='all'?'Font poori file mein lag gaya ✓':'Ab se naya likha hua is font mein hoga ✓');
+}
+function fontRow(id,name){
+  var on=(urFont()===id);
+  return '<div class="sm-sign"><b>'+name+(on?'<span class="fon">✓ Abhi active</span>':'')+'</b>'+
+    '<div class="sm-fp" style="font-family:'+FONTS[id]+'">تہذیب بیکرز — بیٹری</div>'+
+    '<div class="seg"><button onclick="setUFont(\''+id+'\',\'all\')">Apply to all</button><button onclick="setUFont(\''+id+'\',\'cur\')">Current apply</button></div></div>';
+}
+function extraSettings(){
+  var bo=bflyOn(),pc=authStorage.get('bkry_view')==='pc';
+  return '<h3 style="margin-top:18px">View</h3>'+
+    '<div class="seg"><button class="'+(pc?'':'on')+'" onclick="setViewMode(false)">📱 Mobile view</button><button class="'+(pc?'on':'')+'" onclick="setViewMode(true)">🖥️ PC view</button></div>'+
+    '<h3 style="margin-top:18px">Butterfly effect</h3>'+
+    '<div class="seg"><button class="'+(bo?'on':'')+'" onclick="setBfly(true)">On</button><button class="'+(bo?'':'on')+'" onclick="setBfly(false)">Off</button></div>'+
+    '<h3 style="margin-top:18px">Urdu font</h3>'+
+    '<small class="sm-hint">Apply to all = poori file ka text is font mein. Current apply = purana likha hua purane font mein rahe ga, naya likha hua is font mein hoga (har cell ka font ek hi hota hai).</small>'+
+    fontRow('noto','Noto Nastaliq Urdu')+fontRow('sys','System font')+
+    '<h3 style="margin-top:18px">Backup / Restore</h3>'+
+    '<small class="sm-hint">Backup: saara data (forms, pending, logo, sign, settings) ek file mein download hoga. Restore: wohi file chun kar data wapas aa jaye ga.</small>'+
+    '<div class="sm-bt"><button class="n-btn p" onclick="backupData()">⬇ Backup</button><button class="n-btn" onclick="restoreData()">⬆ Restore</button></div>';
+}
+
+/* ============ SETTINGS: logos + signatures ============ */
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){toast('Storage full — chhoti image chunein');return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function getPdfLogo(){return storage.get('bkry_logo_pdf')||LOGO}
+function applyDashLogo(){document.getElementById('hdrLogo').src=storage.get('bkry_logo_dash')||LOGO}
+var SGN={bm:'bkry_sign_bm',tech:'bkry_sign_tech'},signMode={},pickTarget=null;
+function getSign(id){try{return JSON.parse(storage.get(SGN[id])||'null')}catch(e){return null}}
+function setSign(id,o){if(o)return lsSet(SGN[id],JSON.stringify(o));lsDel(SGN[id]);return true}
+function signHtml(id){
+  var o=getSign(id);
+  if(!o||!o.v)return '';
+  if(o.t==='img')return '<span class="sv"><img src="'+o.v+'" alt=""></span>';
+  return '<span class="sv"><span class="sn">'+esc(o.v)+'</span></span>';
+}
+var NOSIGN='<small style="color:var(--mut)">Abhi koi sign nahi</small>';
+function signBlock(id,label){
+  var cur=getSign(id),m=signMode[id]||((cur&&cur.t==='txt')?'txt':'img');
+  var pv=cur?(cur.t==='img'?'<img src="'+cur.v+'" alt="">':'<span class="sn-pv">'+esc(cur.v)+'</span>'):NOSIGN;
+  return '<div class="sm-sign"><b>'+label+'</b>'+
+    '<div class="seg"><button class="'+(m==='img'?'on':'')+'" onclick="setSignMode(\''+id+'\',\'img\')">🖼 Picture</button><button class="'+(m==='txt'?'on':'')+'" onclick="setSignMode(\''+id+'\',\'txt\')">✍ Naam (signature font)</button></div>'+
+    '<div class="sm-pv sign" id="pvSign_'+id+'">'+pv+'</div>'+
+    (m==='img'
+      ?'<div class="sm-bt"><button class="n-btn" onclick="pickImg(\''+id+'\')">⬆ Sign upload</button><button class="n-btn d" onclick="removeSign(\''+id+'\')">Remove</button></div>'
+      :'<input class="sm-in" maxlength="40" placeholder="Naam likhein" value="'+((cur&&cur.t==='txt')?esc(cur.v):'')+'" oninput="setSignText(\''+id+'\',this.value)"><div class="sm-bt"><button class="n-btn d" onclick="removeSign(\''+id+'\')">Remove</button></div>')+
+    '</div>';
+}
+function renderSettings(){
+  document.getElementById('smBody').innerHTML=
+    '<h3>Logos</h3>'+
+    '<div class="sm-row"><div class="sm-pv round"><img src="'+(storage.get('bkry_logo_dash')||LOGO)+'" alt=""></div><div class="sm-tx"><b>Dashboard Logo</b><small>Sirf upar header mein dikhega (gol)</small><div class="sm-bt"><button class="n-btn" onclick="pickImg(\'dash\')">⬆ Upload</button><button class="n-btn d" onclick="resetLogo(\'dash\')">Reset</button></div></div></div>'+
+    '<div class="sm-row"><div class="sm-pv"><img src="'+getPdfLogo()+'" alt=""></div><div class="sm-tx"><b>PDF Logo</b><small>PDF, print aur WhatsApp picture mein</small><div class="sm-bt"><button class="n-btn" onclick="pickImg(\'pdf\')">⬆ Upload</button><button class="n-btn d" onclick="resetLogo(\'pdf\')">Reset</button></div></div></div>'+
+    '<h3>Signatures</h3>'+
+    signBlock('bm','Branch Manager Sign')+signBlock('tech','Technician Sign')+extraSettings();
+}
+function setSignMode(id,m){signMode[id]=m;renderSettings()}
+function setSignText(id,val){
+  val=String(val).slice(0,40);
+  var pv=document.getElementById('pvSign_'+id);
+  if(val.trim()===''){setSign(id,null);if(pv)pv.innerHTML=NOSIGN;return}
+  if(!setSign(id,{t:'txt',v:val}))return;
+  if(pv)pv.innerHTML='<span class="sn-pv">'+esc(val)+'</span>';
+}
+function removeSign(id){setSign(id,null);renderSettings();toast('Sign hata di')}
+function resetLogo(t){lsDel(t==='dash'?'bkry_logo_dash':'bkry_logo_pdf');if(t==='dash')applyDashLogo();renderSettings();toast('Default logo wapas ✓')}
+function pickImg(t){pickTarget=t;var f=document.getElementById('fileIn');f.value='';f.click()}
+function readImg(file,lim,cb){
+  if(!file||!/^image\//.test(file.type)){cb(null);return}
+  var r=new FileReader();
+  r.onerror=function(){cb(null)};
+  r.onload=function(){
+    var im=new Image();
+    im.onerror=function(){cb(null)};
+    im.onload=function(){
+      var w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;
+      if(!w||!h){cb(null);return}
+      var s=Math.min(1,lim[0]/w,lim[1]/h);
+      var cw=Math.max(1,Math.round(w*s)),ch=Math.max(1,Math.round(h*s));
+      var c=document.createElement('canvas');c.width=cw;c.height=ch;
+      var ctx=c.getContext('2d'),jpg=(file.type==='image/jpeg');
+      if(jpg){ctx.fillStyle='#fff';ctx.fillRect(0,0,cw,ch)}
+      ctx.drawImage(im,0,0,cw,ch);
+      var url=null;try{url=c.toDataURL(jpg?'image/jpeg':'image/png',0.9)}catch(e){}
+      cb(url);
+    };
+    im.src=r.result;
+  };
+  r.readAsDataURL(file);
+}
+document.getElementById('fileIn').addEventListener('change',function(){
+  var f=this.files&&this.files[0],t=pickTarget;pickTarget=null;
+  if(!f||!t)return;
+  var lim=(t==='dash')?[320,320]:(t==='pdf')?[480,480]:[600,240];
+  readImg(f,lim,function(url){
+    if(!url){toast('Image load nahi ho saki');return}
+    if(t==='dash'){if(!lsSet('bkry_logo_dash',url))return;applyDashLogo()}
+    else if(t==='pdf'){if(!lsSet('bkry_logo_pdf',url))return}
+    else{if(!setSign(t,{t:'img',v:url}))return;signMode[t]='img'}
+    renderSettings();toast('Save ho gaya ✓');
+  });
+});
+try{if(document.fonts&&document.fonts.load)document.fonts.load('600 20px "Dancing Script"')}catch(e){}
+applyDashLogo();
+
+/* ============ BACK BUTTON ============ */
+function navStart(){
+  try{
+    var st=history.state;
+    if(st&&typeof st.bk==='number'&&st.bk>=1){history.replaceState({bk:1},'')}
+    else{history.replaceState({bk:0},'');history.pushState({bk:1},'')}
+    guardOn=true;navDepth=1;
+  }catch(e){guardOn=false}
+}
+function show(v){
+  showView(v);
+  if(!appActive)return;
+  if(!guardOn)navStart();
+  setTimeout(function(){
+    try{
+      if(v==='home'){
+        if(navDepth>=2){var n=navDepth-1;navDepth=1;skipPop++;history.go(-n)}
+      }else if(navDepth===1){
+        history.pushState({bk:2},'');navDepth=2;
+      }
+    }catch(e){}
+  },50);
+}
+function openSettings(){
+  renderSettings();document.getElementById('settingsOv').hidden=false;
+  if(guardOn&&!modalOpen){try{history.pushState({bk:9},'');navDepth++;modalOpen=true}catch(e){}}
+}
+function closeSettings(fromPop){
+  document.getElementById('settingsOv').hidden=true;
+  if(modalOpen){
+    modalOpen=false;navDepth--;
+    if(!fromPop){skipPop++;try{history.back()}catch(e){skipPop--}}
+  }
+}
+function askLogout(){document.getElementById('outOv').hidden=false}
+function hideLogoutAsk(){document.getElementById('outOv').hidden=true}
+function logoutYes(){hideLogoutAsk();logoutUser()}
+function showExit(){document.getElementById('exitOv').hidden=false}
+function hideExit(){document.getElementById('exitOv').hidden=true}
+function exitYes(){
+  hideExit();
+  var n=navDepth;guardOn=false;navDepth=0;
+  try{window.close()}catch(e){}
+  if(n>0){try{history.go(-n)}catch(e){}}
+  setTimeout(function(){toast('Band karne ke liye ek baar aur back dabayein')},400);
+}
+window.addEventListener('popstate',function(){
+  if(!guardOn)return;
+  if(skipPop>0){skipPop--;return}
+  var lo=document.getElementById('outOv'),loOpen=!lo.hidden;
+  if(loOpen)lo.hidden=true;
+  if(modalOpen){closeSettings(true);return}
+  if(navDepth>=2){navDepth=1;showView('home');return}
+  try{history.pushState({bk:1},'');navDepth=1}catch(e){}
+  if(!loOpen)showExit();
+});
+
+var G={
+  demand:{cols:[1115,4083,1412,1427,2301],head:['SR#','ITEM','IN STORE','DEMAND','REMARKS'],hs:[18,18,14,14,16],hb:[0,1,1,1,1]},
+  complaint:{cols:[1115,4428,1545,3225],head:['SR#','ITEM','QUANTITY','REMARKS'],hs:[18,18,14,16],hb:[0,1,1,1]}
+};
+function pt(t){return(t/20).toFixed(2)+'pt'}
+var A4=841.89,lastScale=1;
+var printTarget=null;
+
+function fmtDateForPdf(dStr){if(!dStr)return'';var parts=dStr.split('-');if(parts.length===3)return parts[2]+'-'+parts[1]+'-'+parts[0];return dStr}
+
+function buildPrint(customDemand){
+  var p,pg,g,total,gw,branch,dateText,sendTo;
+  if(customDemand){
+    p=customDemand.formType==='complaint'?1:0;
+    pg=PAGES[p];
+    g={cols:G[pg.type].cols.slice(),head:G[pg.type].head.slice(),hs:G[pg.type].hs.slice(),hb:G[pg.type].hb.slice()};
+    var targetTotalTwips=10738,statusTwips=1450,oldStatusTwips=1400;
+    var origTotal=g.cols.reduce(function(a,b){return a+b},0);
+    var ratio=(targetTotalTwips-oldStatusTwips)/origTotal;
+    for(var i=0;i<g.cols.length;i++){g.cols[i]=Math.floor(g.cols[i]*ratio)}
+    g.cols[2]+=150;g.cols[0]-=200;
+    g.cols.push(statusTwips);g.head.push('STATUS');g.hs.push(14);g.hb.push(1);
+    total=customDemand.items.length;
+    branch=customDemand.branch;
+    dateText=customDemand.dateText;
+    sendTo=(customDemand.sendTo||'').trim();
+  }else{
+    p=active;pg=PAGES[p];g=G[pg.type];total=rowCount(p);
+    var defBranch="تہذیب بیکرز-G9",defDate=getTodayLocal();
+    branch=(data[p+'_branch']!==undefined&&data[p+'_branch']!=='')?data[p+'_branch']:defBranch;
+    dateText=(data[p+'_date']!==undefined&&data[p+'_date']!=='')?data[p+'_date']:defDate;
+    sendTo=(data[p+'_sendto']||'').trim();
+  }
+  var bTag=customDemand?(customDemand.bf||''):(data[p+'_branch_f']||''),sTag=customDemand?(customDemand.sf||''):(data[p+'_sendto_f']||'');
+  g={cols:g.cols.slice(),head:g.head,hs:g.hs,hb:g.hb};
+  g.cols[g.cols.length-1]+=10738-g.cols.reduce(function(a,b){return a+b},0);
+  var gw=g.cols.reduce(function(a,b){return a+b},0);
+  var cg='<colgroup>'+g.cols.map(function(c){return '<col style="width:'+(c/gw*100).toFixed(4)+'%">'}).join('')+'</colgroup>';
+  var th=g.head.map(function(x,i){return '<th style="font-size:'+g.hs[i]+'pt;font-weight:'+(g.hb[i]?700:400)+'">'+x+'</th>'}).join('');
+  var rows='';
+  for(var r=0;r<total;r++){
+    var tds='<td class="n">'+pad(r+1)+'</td>';
+    for(var c=1;c<g.cols.length;c++){
+      var cellVal='';
+      if(customDemand){
+        var it=customDemand.items[r];
+        if(it){
+          var isB=isBlank(it);
+          if(customDemand.formType==='demand'){
+            if(c===1)cellVal=it.item||'';
+            if(c===2)cellVal=it.inStore||'';
+            if(c===3)cellVal=it.demand||'';
+            if(c===4)cellVal=it.remarks||'';
+            if(c===5)cellVal=isB?'':(it.received?'Received':'Pending');
+          }else{
+            if(c===1)cellVal=it.item||'';
+            if(c===2)cellVal=it.inStore||'';
+            if(c===3)cellVal=it.remarks||'';
+            if(c===4)cellVal=isB?'':(it.received?'Received':'Pending');
+          }
+        }
+      }else{
+        cellVal=data[p+'_'+r+'_'+(c-1)]||'';
+      }
+      var fTag='';
+      if(customDemand){var it2=customDemand.items[r];if(it2&&it2.fm){var nm=(customDemand.formType==='demand'?['','item','inStore','demand','remarks']:['','item','inStore','remarks'])[c];if(nm)fTag=it2.fm[nm]||''}}
+      else{fTag=data[p+'_'+r+'_'+(c-1)+'_f']||''}
+      tds+='<td><div class="t"'+fAttr(cellVal?fTag:'')+'>'+esc(cellVal)+'</div></td>';
+    }
+    rows+='<tr style="height:30pt">'+tds+'</tr>';
+  }
+  document.getElementById('pIn').innerHTML=
+    '<div class="sh">'+
+    '<table class="wh"><colgroup><col style="width:75.1pt"><col style="width:294.85pt"><col style="width:67.2pt"><col style="width:99.75pt"></colgroup>'+
+    '<tr style="height:20pt"><td class="logo" rowspan="3"><img src="'+getPdfLogo()+'"'+(storage.get('bkry_logo_pdf')?' class="custom"':'')+' alt=""></td><td class="big" rowspan="2">THE BKRY</td><td colspan="2">Doc # DFT-AD-004</td></tr>'+
+    '<tr style="height:19pt"><td>Issue # 04</td><td>Issue Date</td></tr>'+
+    '<tr style="height:39pt"><td class="big">'+pg.title+'</td><td>Page 1 of 1</td><td></td></tr></table>'+
+    '<div class="wmeta">Branch Name: <span class="f"'+fAttr(branch?bTag:'')+'>'+esc(branch)+'</span>'+(sendTo?'<span class="c"><span class="f"'+fAttr(sTag)+'>'+esc(sendTo)+'</span></span>':'')+'<span class="d">Date: <span class="f">'+esc(fmtDateForPdf(dateText))+'</span></span></div>'+
+    '<div id="pBody">'+
+    '<table class="wgrid" style="width:100%">'+cg+'<thead><tr style="height:20.25pt">'+th+'</tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<div style="height:32.4pt"></div><div class="wnote">Must be delivered to authorized person. Thank you</div>'+
+    '<div style="height:32.4pt"></div><div class="wsign"><span>Branch Manager Sign: <span class="sl">_____________'+(customDemand?signHtml('bm'):'')+'</span></span><span>Technician Sign: <span class="sl">____________'+(customDemand?signHtml('tech'):'')+'</span></span></div></div></div>';
+  fit();
+}
+function fit(){
+  var el=document.getElementById('pIn'),body=document.getElementById('pBody');
+  el.style.zoom='';el.style.width='595.3pt';el.style.paddingTop='34pt';
+  body.style.zoom='';body.style.width='';
+  var av=(A4*96/72)-8,s=1;
+  for(var i=0;i<8;i++){
+    var h=el.getBoundingClientRect().height;if(h<=av+0.5)break;
+    var bh=body.getBoundingClientRect().height;
+    s=Math.max(0.22,s*Math.max(0.1,(bh-(h-av)))/bh);
+    body.style.zoom=s;body.style.width=(536.9/s)+'pt';
+  }
+  lastScale=s;
+}
+function downloadPdf(){printTarget=null;buildPrint(null);toast(lastScale<0.55?'Bohat content — PDF chhota hoga · PDF tayyar ho rahi hai…':'PDF tayyar ho rahi hai…');setTimeout(function(){window.print();setTimeout(hideToast,600)},200)}
+window.addEventListener('beforeprint',function(){buildPrint(printTarget)});
+
+function unhidePA(doc){var a=doc.getElementById('pArea');if(a){a.style.opacity='1';a.style.visibility='visible'}}
+function h2cScale(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)?1.6:2}
+function nextPaint(){return new Promise(function(r){requestAnimationFrame(function(){setTimeout(r,60)})})}
+/* ============ SHARE VIA GMAIL ============ */
+async function shareViaGmail(){
+  if(typeof html2canvas==='undefined'||typeof window.jspdf==='undefined'){
+    toast('PDF libraries load nahi hui — internet check karein');
+    return;
+  }
+
+  var pg=PAGES[active];
+  var branch=data[active+'_branch']||'THE BKRY';
+  var dateVal=data[active+'_date']||getTodayLocal();
+
+  var subject=encodeURIComponent('THE BKRY - '+pg.title+' - '+branch+' - '+dateVal);
+  var bodyText=encodeURIComponent(
+    'Assalam o Alaikum,\n\n'+
+    'Please find the attached '+pg.title+'.\n\n'+
+    'Branch: '+branch+'\n'+
+    'Date: '+dateVal+'\n\n'+
+    'NOTE: PDF has been downloaded to your device. Please attach it to this email before sending.\n\n'+
+    'Regards,\nTHE BKRY'
+  );
+  var gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&su='+subject+'&body='+bodyText;
+
+  var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  /* Desktop: open Gmail IMMEDIATELY (sync) so popup blocker allows it */
+  var gmailWin=null;
+  if(!isMobile){
+    gmailWin=window.open(gmailUrl,'_blank');
+    if(!gmailWin||gmailWin.closed||typeof gmailWin.closed==='undefined'){
+      toast('Popup blocked — site ke liye popups allow karein');
+    }
+  }
+
+  toast('PDF ban rahi hai…');
+  await nextPaint();
+
+  try{
+    printTarget=null;
+    buildPrint(null);
+
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready}catch(e){}}
+    await new Promise(function(r){setTimeout(r,350)});
+
+    var pArea=document.getElementById('pArea');
+    var prevStyle=pArea.getAttribute('style')||'';
+    pArea.style.cssText='position:fixed;left:0;top:0;width:210mm;background:#fff;z-index:-9999;pointer-events:none;opacity:0;';
+    var pIn=document.getElementById('pIn');
+    var canvas;
+    try{
+      canvas=await html2canvas(pIn,{scale:h2cScale(),useCORS:true,backgroundColor:'#ffffff',logging:false,onclone:unhidePA});
+    }finally{
+      pArea.style.cssText=prevStyle;
+    }
+
+    var jsPDF=window.jspdf.jsPDF;
+    var pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pdfW=pdf.internal.pageSize.getWidth();
+    var pdfH=pdf.internal.pageSize.getHeight();
+    var imgW=pdfW;
+    var imgH=(canvas.height/canvas.width)*pdfW;
+    if(imgH>pdfH){imgW=imgW*(pdfH/imgH);imgH=pdfH;}
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.9),'JPEG',(pdfW-imgW)/2,0,imgW,imgH);
+
+    var pdfBlob=pdf.output('blob');
+    var safeBranch=String(branch).replace(/[^\w\u0600-\u06FF-]+/g,'_').slice(0,40);
+    var fileName='THE_BKRY_'+pg.type.toUpperCase()+'_'+safeBranch+'_'+dateVal+'.pdf';
+    var file=new File([pdfBlob],fileName,{type:'application/pdf'});
+
+    /* Mobile only: native share sheet (auto-attaches PDF, has Gmail option) */
+    if(isMobile&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file],title:'THE BKRY - '+pg.title,text:'Demand Form · '+branch+' · '+dateVal});
+        toast('PDF shared ✓');
+        return;
+      }catch(err){
+        if(err&&err.name==='AbortError'){toast('Share cancelled');return;}
+        if(err&&err.name==='NotAllowedError'){
+          showShareReady(file,'THE BKRY - '+pg.title,'Demand Form · '+branch+' · '+dateVal);
+          return;
+        }
+      }
+    }
+
+    /* Desktop (or mobile fallback): download PDF */
+    var url=URL.createObjectURL(pdfBlob);
+    var a=document.createElement('a');
+    a.href=url;a.download=fileName;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url)},1500);
+
+    if(!gmailWin||gmailWin.closed){
+      var win2=window.open(gmailUrl,'_blank');
+      if(!win2){toast('Gmail khud kholein — PDF Downloads folder mein hai');return;}
+    }
+
+    toast('PDF downloaded · Gmail tab mein attach karein ✓');
+  }catch(e){
+    console.error(e);
+    toast('PDF generation failed — try again');
+  }
+}
+
+/* Mobile: PDF ban chuki hai, lekin share ke liye fresh tap chahiye */
+function showShareReady(file,title,text,msg,btnLabel){
+  msg=msg||'PDF tayyar hai ✓<br>Neeche button dabayein aur Gmail select karein';
+  btnLabel=btnLabel||'📤 Gmail mein Share karein';
+  hideToast();
+  var old=document.getElementById('shareReady');if(old)old.remove();
+  var ov=document.createElement('div');
+  ov.id='shareReady';
+  ov.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;padding:22px;max-width:320px;width:100%;text-align:center;color:#111;">'+
+    '<div style="font-size:15px;margin-bottom:14px;line-height:1.5;">'+msg+'</div>'+
+    '<button id="shareReadyBtn" style="background:#ea4335;color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:15px;width:100%;margin-bottom:8px;">'+btnLabel+'</button>'+
+    '<button id="shareReadyClose" style="background:#eee;color:#333;border:0;border-radius:10px;padding:10px 18px;font-size:14px;width:100%;">Band karein</button></div>';
+  document.body.appendChild(ov);
+  document.getElementById('shareReadyClose').onclick=function(){ov.remove()};
+  document.getElementById('shareReadyBtn').onclick=async function(){
+    try{
+      await navigator.share({files:[file],title:title,text:text});
+      ov.remove();toast('PDF shared ✓');
+    }catch(err){
+      if(err&&err.name==='AbortError')return;
+      toast('Share nahi ho saka');
+    }
+  };
+}
+
+/* WhatsApp: poori demand ki picture (PDF jaisi hi layout) */
+async function shareDemandImage(id){
+  var d=demands.filter(function(x){return x.id===id})[0];if(!d)return;
+  if(typeof html2canvas==='undefined'){toast('Image library load nahi hui — internet check karein');return}
+  toast('Picture ban rahi hai…');
+  await nextPaint();
+  try{
+    printTarget=d;
+    buildPrint(d);
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready}catch(e){}}
+    await new Promise(function(r){setTimeout(r,350)});
+    var pArea=document.getElementById('pArea');
+    var prevStyle=pArea.getAttribute('style')||'';
+    pArea.style.cssText='position:fixed;left:0;top:0;width:210mm;background:#fff;z-index:-9999;pointer-events:none;opacity:0;';
+    var pIn=document.getElementById('pIn');
+    var canvas;
+    try{
+      canvas=await html2canvas(pIn,{scale:h2cScale(),useCORS:true,backgroundColor:'#ffffff',logging:false,onclone:function(doc){unhidePA(doc);
+        var t=doc.querySelector('#pIn table.wgrid');
+        if(!t)return;
+        t.style.borderCollapse='separate';t.style.borderSpacing='0';
+        t.style.borderLeft='.6pt solid #000';t.style.borderTop='.6pt solid #000';
+        t.querySelectorAll('th,td').forEach(function(c){c.style.borderLeft='0';c.style.borderTop='0'});
+      }});
+    }finally{
+      pArea.style.cssText=prevStyle;
+    }
+    var blob=await new Promise(function(res){canvas.toBlob(res,'image/png')});
+    if(!blob){toast('Picture ban nahi saki — dobara try karein');return}
+    var safeBranch=String(d.branch||'THE BKRY').replace(/[^\w\u0600-\u06FF-]+/g,'_').slice(0,40);
+    var fileName='THE_BKRY_'+String(d.formType||'demand').toUpperCase()+'_'+safeBranch+'_'+(d.dateText||todayISO())+'.png';
+    var file=new File([blob],fileName,{type:'image/png'});
+    var title='THE BKRY - '+PAGES[d.formType==='complaint'?1:0].title;
+
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file],title:title});
+        toast('Picture shared ✓');
+        return;
+      }catch(err){
+        if(err&&err.name==='AbortError'){toast('Share cancelled');return}
+        if(err&&err.name==='NotAllowedError'){
+          showShareReady(file,title,undefined,'Picture tayyar hai ✓<br>Neeche button dabayein aur WhatsApp select karein','📤 WhatsApp par Share karein');
+          return;
+        }
+      }
+    }
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=fileName;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url)},1500);
+    toast('Picture download ho gayi — WhatsApp mein khud bhej dein');
+  }catch(e){
+    console.error(e);
+    toast('Picture generation failed — try again');
+  }
+}
+
+/* WhatsApp: Write Form ki current demand ki picture (PDF jaisi layout) */
+async function shareFormWhatsApp(){
+  if(typeof html2canvas==='undefined'){toast('Image library load nahi hui — internet check karein');return}
+  var pg=PAGES[active];
+  var branch=data[active+'_branch']||'THE BKRY';
+  var dateVal=data[active+'_date']||getTodayLocal();
+  var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var waUrl='https://web.whatsapp.com/';
+
+  /* Desktop: open WhatsApp IMMEDIATELY (sync) like Gmail, so popup blocker allows it */
+  var waWin=null,clipRes=null,copied=false;
+  if(!isMobile){
+    waWin=window.open(waUrl,'_blank');
+    if(!waWin||waWin.closed||typeof waWin.closed==='undefined'){
+      toast('Popup blocked — site ke liye popups allow karein');
+    }
+    /* picture clipboard mein bhi copy hogi taake chat mein Ctrl+V ho sake */
+    try{
+      if(navigator.clipboard&&window.ClipboardItem){
+        var cp=new Promise(function(res,rej){clipRes={res:res,rej:rej}});
+        navigator.clipboard.write([new ClipboardItem({'image/png':cp})]).then(function(){copied=true}).catch(function(){});
+      }
+    }catch(e){clipRes=null}
+  }
+
+  toast('Picture ban rahi hai…');
+  await nextPaint();
+  try{
+    printTarget=null;
+    buildPrint(null);
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready}catch(e){}}
+    await new Promise(function(r){setTimeout(r,350)});
+    var pArea=document.getElementById('pArea');
+    var prevStyle=pArea.getAttribute('style')||'';
+    pArea.style.cssText='position:fixed;left:0;top:0;width:210mm;background:#fff;z-index:-9999;pointer-events:none;opacity:0;';
+    var pIn=document.getElementById('pIn');
+    var canvas;
+    try{
+      canvas=await html2canvas(pIn,{scale:h2cScale(),useCORS:true,backgroundColor:'#ffffff',logging:false,onclone:function(doc){unhidePA(doc);
+        var t=doc.querySelector('#pIn table.wgrid');
+        if(!t)return;
+        t.style.borderCollapse='separate';t.style.borderSpacing='0';
+        t.style.borderLeft='.6pt solid #000';t.style.borderTop='.6pt solid #000';
+        t.querySelectorAll('th,td').forEach(function(c){c.style.borderLeft='0';c.style.borderTop='0'});
+      }});
+    }finally{
+      pArea.style.cssText=prevStyle;
+    }
+    /* Mobile: JPEG (fast) so share sheet opens before the tap expires; Desktop: PNG for clipboard */
+    var mime=isMobile?'image/jpeg':'image/png';
+    var ext=isMobile?'.jpg':'.png';
+    var blob=await new Promise(function(res){canvas.toBlob(res,mime,0.92)});
+    if(!blob){
+      if(clipRes)clipRes.rej(new Error('no blob'));
+      toast('Picture ban nahi saki — dobara try karein');return
+    }
+    if(clipRes)clipRes.res(blob);
+    var safeBranch=String(branch).replace(/[^\w\u0600-\u06FF-]+/g,'_').slice(0,40);
+    var fileName='THE_BKRY_'+String(pg.type||'demand').toUpperCase()+'_'+safeBranch+'_'+dateVal+ext;
+    var file=new File([blob],fileName,{type:mime});
+    var title='THE BKRY - '+pg.title;
+
+    /* Mobile: native share sheet straight to WhatsApp (picture auto-attached) */
+    if(isMobile&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file],title:title});
+        toast('Picture shared ✓');
+        return;
+      }catch(err){
+        if(err&&err.name==='AbortError'){toast('Share cancelled');return}
+        if(err&&err.name==='NotAllowedError'){
+          showShareReady(file,title,undefined,'Picture tayyar hai ✓<br>Neeche button dabayein aur WhatsApp select karein','📤 WhatsApp par Share karein');
+          return;
+        }
+      }
+    }
+
+    /* Desktop (or mobile fallback): download picture */
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=fileName;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url)},1500);
+
+    if(!waWin||waWin.closed){
+      var win2=window.open(waUrl,'_blank');
+      if(!win2&&!isMobile){toast('WhatsApp khud kholein — picture Downloads folder mein hai');return}
+    }
+    await new Promise(function(r){setTimeout(r,200)});
+    toast(copied?'Picture copy ho gayi · WhatsApp chat mein Ctrl+V karein ✓':'Picture download ho gayi · WhatsApp mein attach karein ✓');
+  }catch(e){
+    console.error(e);
+    if(clipRes)clipRes.rej(e);
+    toast('Picture generation failed — try again');
+  }
+}
+
+/* ============ DEMANDS STORE ============ */
+var DK='bkry_demands_v1',demands=[];
+try{demands=JSON.parse(storage.get(DK)||'[]')||[]}catch(e){demands=[]}
+if(!Array.isArray(demands))demands=[];
+if(editingId!==null&&!demands.some(function(d){return d.id===editingId}))editingId=null;
+function saveDemands(){try{storage.set(DK,JSON.stringify(demands))}catch(e){toast('Storage full')}}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function fmtISO(i){if(!i)return'';var a=i.split('-');return a[2]+'-'+a[1]+'-'+a[0]}
+var toastT;function toast(m){var el=document.getElementById('toast');var busy=/(…|\.\.\.)\s*$/.test(m);el.innerHTML='';if(busy){var sp=document.createElement('span');sp.className='w7';el.appendChild(sp)}var tx=document.createElement('span');tx.textContent=m;el.appendChild(tx);el.classList.add('on');document.documentElement.classList.toggle('gen',busy);clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on');document.documentElement.classList.remove('gen')},busy?40000:2200)}
+function hideToast(){clearTimeout(toastT);document.getElementById('toast').classList.remove('on');document.documentElement.classList.remove('gen')}
+
+var view='home';
+function showView(v){
+  view=v;lastInput=null;printTarget=null;
+  ['home','write','pending','received','total'].forEach(function(n){document.getElementById('v-'+n).hidden=(n!==v)});
+  if(v==='home')renderHome();
+  if(v==='pending'||v==='received'||v==='total')renderList(v);
+  window.scrollTo(0,0);
+}
+
+function stats(){
+  var s={pi:0,pf:0,ri:0,rf:0,ti:0,tf:0};
+  demands.forEach(function(d){
+    if(d.id===editingId)return;
+    var realItems=d.items.filter(function(it){return !isBlank(it)});
+    if(realItems.length===0)return;
+    s.tf++;
+    var allRecv=realItems.every(function(it){return it.received});
+    var p=realItems.filter(function(it){return !it.received}).length;
+    var r=realItems.filter(function(it){return it.received}).length;
+    s.ti+=realItems.length;
+    if(allRecv){s.rf++;s.ri+=r}else{s.pf++;s.pi+=p}
+  });
+  return s;
+}
+function statCard(cls,ico,t,n,sub,act){return '<button class="stat" onclick="'+act+'"><div class="ico">'+ico+'</div><div class="t">'+t+'</div><div class="bot"><div class="n">'+n+'</div><div class="s">'+sub+'</div></div></button>'}
+function renderHome(){
+  var s=stats();
+  document.getElementById('v-home').innerHTML=
+    '<div class="hello"><h2>Dashboard</h2><p>Demand likhein, pending dekhein, received tick karein.</p></div>'+
+    '<div class="sg">'+
+    statCard('w','✍','Write Form','+','Naya form banayein',"show('write')")+
+    statCard('p','⏳','Pending',s.pf,'forms · '+s.pi+' items',"show('pending')")+
+    statCard('r',ICO_R,'Received',s.rf,'forms · '+s.ri+' items',"show('received')")+
+    statCard('t',ICO_T,'Total',s.tf,'forms · '+s.ti+' items',"show('total')")+'</div>';
+}
+
+/* ============ SAVE (with edit support) ============ */
+function saveToPending(){
+  var p=active,pg=PAGES[p];
+  var total=rowCount(p),items=[];
+  for(var r=0;r<total;r++){
+    var it=(data[p+'_'+r+'_0']||'').trim();
+    if(pg.type==='demand'){
+      items.push({item:it,inStore:(data[p+'_'+r+'_1']||'').trim(),demand:(data[p+'_'+r+'_2']||'').trim(),remarks:(data[p+'_'+r+'_3']||'').trim(),received:false,receivedDate:''});
+    }else{
+      items.push({item:it,inStore:(data[p+'_'+r+'_1']||'').trim(),demand:'',remarks:(data[p+'_'+r+'_2']||'').trim(),received:false,receivedDate:''});
+    }
+    var _fm=cellFm(p,r,pg.type);if(_fm)items[items.length-1].fm=_fm;
+  }
+  var defBranch="تہذیب بیکرز-G9";
+  var defDate=getTodayLocal();
+  var br=(data[p+'_branch']!==undefined&&data[p+'_branch']!=='')?data[p+'_branch']:defBranch;
+  var st=(data[p+'_sendto']||'').trim();
+  var bfTag=data[p+'_branch_f']||'',sfTag=data[p+'_sendto_f']||'';
+  var dt=(data[p+'_date']!==undefined&&data[p+'_date']!=='')?data[p+'_date']:defDate;
+
+  if(editingId!==null){
+    var existingIdx=-1;
+    for(var i=0;i<demands.length;i++){if(demands[i].id===editingId){existingIdx=i;break}}
+    if(existingIdx>=0){
+      var oldDemand=demands[existingIdx];
+      var oldItems=oldDemand.items||[];
+      for(var k=0;k<items.length&&k<oldItems.length;k++){
+        if(oldItems[k].received&&items[k].item===oldItems[k].item){
+          items[k].received=oldItems[k].received;
+          items[k].receivedDate=oldItems[k].receivedDate;
+        }
+      }
+      /* Date is updated if user changed it, otherwise keeps the new fetched date from input */
+      demands[existingIdx]={
+        id:editingId,
+        formType:pg.type,
+        form:pg.tab,
+        branch:br.trim(),
+        dateText:dt.trim(), /* UPDATED: uses the date from the input field */
+        sendTo:st,bf:bfTag,sf:sfTag,
+        created:oldDemand.created||todayISO(),
+        items:items
+      };
+    }
+    saveDemands();
+    toast('Form updated ✓');
+    if(confirm('Form saaf kar dun?')){
+      editingId=null;
+      clearNow();
+    }
+    return;
+  }
+
+  demands.push({id:Date.now(),formType:pg.type,form:pg.tab,branch:br.trim(),dateText:dt.trim(),sendTo:st,bf:bfTag,sf:sfTag,created:todayISO(),items:items});
+  saveDemands();
+  toast('Pending mein save ✓');
+  if(confirm('Form saaf kar dun?'))clearNow();
+}
+
+/* ============ LIST ============ */
+var TITLES={pending:'Pending',received:'Received',total:'Total'};
+function newF(){return {q:'',from:'',to:todayISO(),toAuto:true}}
+var F_={pending:newF(),received:newF(),total:newF()};
+var openIds={};
+
+function renderList(v){
+  var f=F_[v],dl=(v==='received')?'Received date':'Demand date';
+  if(f.toAuto)f.to=todayISO();
+  document.getElementById('v-'+v).innerHTML=
+    '<div class="ph"><h2>'+TITLES[v]+' Forms</h2><span class="bdg" id="cnt-'+v+'"></span></div>'+
+    '<div class="filters">'+
+    '<div class="fg"><label>Search</label><input type="text" dir="auto" lang="ur" data-v="'+v+'" data-fk="q" placeholder="Item ya branch…" value="'+esc(f.q)+'"></div>'+
+    '<div class="dg"><label>Date</label><div class="dr">'+
+    '<div class="df"><span>From</span><input type="date" data-v="'+v+'" data-fk="from" value="'+f.from+'"></div>'+
+    '<div class="df"><span>End</span><input type="date" data-v="'+v+'" data-fk="to" value="'+f.to+'"></div></div></div>'+
+    '<button class="n-btn" onclick="clearF(\''+v+'\')">Clear</button></div>'+
+    '<div id="list-'+v+'"></div>';
+  drawList(v);
+}
+function clearF(v){F_[v]=newF();renderList(v)}
+
+function drawList(v){
+  var f=F_[v],q=f.q.trim().toLowerCase(),html='',forms=0,count=0;
+  var recs=demands.slice().sort(function(a,b){return b.id-a.id});
+  recs.forEach(function(d){
+    if(d.id===editingId)return;
+    var realItems=d.items.filter(function(it){return !isBlank(it)});
+    if(realItems.length===0)return;
+    var allRecv=realItems.every(function(it){return it.received});
+    if(v==='pending'&&allRecv)return;
+    if(v==='received'&&!allRecv)return;
+    var rows=[];
+    d.items.forEach(function(it,i){rows.push({it:it,i:i})});
+    if(q){
+      var formMatch=(d.branch||'').toLowerCase().indexOf(q)>=0;
+      if(!formMatch){formMatch=d.items.some(function(it){return (it.item+' '+it.remarks).toLowerCase().indexOf(q)>=0})}
+      if(!formMatch)return;
+    }
+    if(f.from||f.to){var dd=d.dateText||d.created||'';if(!dd||(f.from&&dd<f.from)||(f.to&&dd>f.to))return}
+    forms++;count+=realItems.length;
+    html+=accHtml(v,d,rows,!!q,allRecv);
+  });
+  document.getElementById('cnt-'+v).textContent=forms+' forms · '+count+' items';
+  document.getElementById('list-'+v).innerHTML=html||'<div class="empty">Koi form nahi mila.'+(demands.length?'':'<br>Pehle "Write Form" se likh kar save karein.')+'</div>';
+}
+
+function hl(t,q){t=String(t==null?'':t);if(!q)return esc(t);var lo=t.toLowerCase();if(lo.length!==t.length||lo.indexOf(q)<0)return esc(t);var out='',i=0,j;while((j=lo.indexOf(q,i))>=0){out+=esc(t.slice(i,j))+'<mark class="hl">'+esc(t.slice(j,j+q.length))+'</mark>';i=j+q.length}return out+esc(t.slice(i))}
+
+function accHtml(v,d,rows,searching,allRecv){
+  var hq=(F_[v]&&F_[v].q||'').trim().toLowerCase();
+  var isComp=(d.formType==='complaint');
+  var showSt=true;
+  var realItems=d.items.filter(function(it){return !isBlank(it)});
+  var recvCount=realItems.filter(function(it){return it.received}).length;
+  var totCount=realItems.length;
+  var body=rows.map(function(r){
+    var it=r.it;
+    var isEmpty=isBlank(it);
+    var cbCell=isEmpty?'<td class="ck"></td>':'<td class="ck"><input type="checkbox" class="rc" data-id="'+d.id+'" data-i="'+r.i+'"'+(it.received?' checked':'')+'></td>';
+    var statusCell=isEmpty?'<td></td>':'<td>'+(it.received?'<span class="pill ok">Received · '+fmtISO(it.receivedDate)+'</span>':'<span class="pill w">Pending</span>')+'</td>';
+    return '<tr>'+cbCell+
+      '<td class="u"'+ufa(it,'item')+'>'+hl(it.item,hq)+'</td>'+
+      '<td class="u"'+ufa(it,'inStore')+'>'+esc(it.inStore)+'</td>'+
+      (isComp?'':'<td class="u"'+ufa(it,'demand')+'>'+esc(it.demand)+'</td>')+
+      '<td class="u"'+ufa(it,'remarks')+'>'+hl(it.remarks,hq)+'</td>'+
+      (showSt?statusCell:'')+
+      '</tr>';
+  }).join('');
+  var head='<th class="ck"><input type="checkbox" class="rall" data-id="'+d.id+'"'+(allRecv?' checked':'')+' title="Select All"></th>'+
+    '<th>ITEM</th><th>'+(isComp?'QUANTITY':'IN STORE')+'</th>'+
+    (isComp?'':'<th>DEMAND</th>')+
+    '<th>REMARKS</th>'+(showSt?'<th>STATUS</th>':'');
+  var isOpen=openIds[d.id]||searching;
+  var typeLabel=isComp?'Complaint':'Demand';
+  
+  var progPill='<span class="pill prog" style="flex-shrink:0;">'+recvCount+' / '+totCount+' Received</span>';
+  
+  return '<details class="acc" data-id="'+d.id+'"'+(isOpen?' open':'')+'>'+
+    '<summary>'+
+      '<div class="acc-top">'+
+         progPill+
+         '<div class="acc-btns">'+
+            '<button class="mini edit" data-id="'+d.id+'" style="background:#e8f5e9; color:#10b981; flex-shrink:0; font-size:14px; padding:5px 9px;" title="Edit this form" aria-label="Edit">📝</button>'+
+            '<button class="mini print-btn" data-id="'+d.id+'" style="background:#eef0ff; color:#4f46e5; flex-shrink:0;" title="Download PDF">🖨 PDF</button>'+
+            '<button class="mini wa-btn" data-id="'+d.id+'" style="background:#25D366; padding:6px 8px; flex-shrink:0;" title="WhatsApp par picture share karein" aria-label="WhatsApp"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path stroke-width="2" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path stroke-width="2.6" transform="translate(6.6 6.4) scale(.45)" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>'+
+            '<button class="mini del" data-id="'+d.id+'" style="flex-shrink:0;">Del</button>'+
+         '</div>'+
+      '</div>'+
+      (function(){var fi=realItems[0];var nm=fi?String(fi.item||'').trim():'';if(nm){var wd=nm.split(/\s+/);nm=wd.slice(0,3).join(' ')+(wd.length>3?' …':'')}return nm?'<div class="acc-mid acc-item" dir="auto"'+ufa(fi,'item')+'>'+esc(nm)+'</div>':'<div class="acc-mid"'+fAttr(d.branch?d.bf:'')+'>'+(esc(d.branch)||'No branch')+'</div>'})()+
+      '<div class="acc-bot">'+typeLabel+' · '+fmtISO(d.dateText||d.created)+'</div>'+
+    '</summary>'+
+    '<div class="sc"><table class="items"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div></details>';
+}
+
+/* ============ EDIT DEMAND ============ */
+function editDemand(id){
+  var d=null;
+  for(var i=0;i<demands.length;i++){if(demands[i].id===id){d=demands[i];break}}
+  if(!d)return;
+
+  var idx=(d.formType==='complaint')?1:0;
+  var reW=new RegExp('^'+idx+'_\\d+_\\d+$');
+  var hasText=Object.keys(data).some(function(k){return reW.test(k)&&String(data[k]||'').trim()!==''});
+  if(hasText){toast('Write demand mein pehle se likha hai — pehle Save to Pending karein');return}
+  active=idx;data.__active=idx;
+
+  /* Clear existing form data for this tab */
+  var pre=idx+'_';
+  Object.keys(data).forEach(function(k){if(k.indexOf(pre)===0)delete data[k]});
+
+  /* Load metadata — date loaded as-is */
+  data[idx+'_branch']=d.branch||'';
+  data[idx+'_date']=d.dateText||'';
+  data[idx+'_sendto']=d.sendTo||'';
+  if(d.bf)data[idx+'_branch_f']=d.bf;
+  if(d.sf)data[idx+'_sendto_f']=d.sf;
+
+  /* Use EXACT original row count — no padding, no trimming */
+  var total=d.items.length||1;
+  data['rows_'+idx]=total;
+
+  d.items.forEach(function(it,r){
+    if(idx===0){
+      data[idx+'_'+r+'_0']=it.item||'';
+      data[idx+'_'+r+'_1']=it.inStore||'';
+      data[idx+'_'+r+'_2']=it.demand||'';
+      data[idx+'_'+r+'_3']=it.remarks||'';
+    }else{
+      data[idx+'_'+r+'_0']=it.item||'';
+      data[idx+'_'+r+'_1']=it.inStore||'';
+      data[idx+'_'+r+'_2']=it.remarks||'';
+    }
+  });
+
+  d.items.forEach(function(it,r){loadFm(idx,r,it)});
+  editingId=id;
+  lastInput=null;
+  save();
+  show('write');
+  renderTabs();
+  renderForm();
+  toast('Moved to Write demand');
+}
+
+/* ============ CHECKBOX / ACTIONS ============ */
+function setRecv(id,idxs,checked){
+  var d=demands.filter(function(x){return x.id===id})[0];if(!d)return;
+  idxs.forEach(function(i){d.items[i].received=checked;d.items[i].receivedDate=checked?todayISO():''});
+  openIds[id]=true;saveDemands();drawList(view);
+  toast(checked?'Received ✓':'Wapas Pending');
+}
+function delDemand(id){
+  if(!confirm('Yeh poora form delete kar den?'))return;
+  demands=demands.filter(function(x){return x.id!==id});saveDemands();drawList(view);
+}
+function applyF(t){if(t.dataset&&t.dataset.fk){F_[t.dataset.v][t.dataset.fk]=t.value;if(t.dataset.fk==='to')F_[t.dataset.v].toAuto=false;drawList(t.dataset.v)}}
+document.addEventListener('input',function(e){applyF(e.target)});
+document.addEventListener('change',function(e){
+  var t=e.target;applyF(t);if(!t.classList)return;
+  if(t.classList.contains('rc'))setRecv(+t.dataset.id,[+t.dataset.i],t.checked);
+  else if(t.classList.contains('rall')){var idx=[];t.closest('table').querySelectorAll('input.rc').forEach(function(cb){idx.push(+cb.dataset.i)});setRecv(+t.dataset.id,idx,t.checked)}
+});
+document.addEventListener('click',function(e){
+  var del=e.target.closest&&e.target.closest('.del');
+  if(del){e.preventDefault();delDemand(+del.dataset.id);return}
+
+  var editBtn=e.target.closest&&e.target.closest('.edit');
+  if(editBtn){e.preventDefault();editDemand(+editBtn.dataset.id);return}
+
+  var waBtn=e.target.closest&&e.target.closest('.wa-btn');
+  if(waBtn){e.preventDefault();shareDemandImage(+waBtn.dataset.id);return}
+
+  var printBtn=e.target.closest&&e.target.closest('.print-btn');
+  if(printBtn){
+    e.preventDefault();
+    var id=+printBtn.dataset.id;
+    var d=demands.filter(function(x){return x.id===id})[0];
+    if(d){printTarget=d;buildPrint(d);setTimeout(function(){window.print()},200)}
+    return;
+  }
+
+  var sm=e.target.closest&&e.target.closest('summary');
+  if(sm&&!e.target.closest('input')&&!e.target.closest('button')){var det=sm.parentNode;openIds[det.dataset.id]=!det.open}
+});
+
+renderTabs();renderForm();
+</script>
+<div id="bflyLayer" aria-hidden="true"></div>
+<script>
+(function(){
+  var layer=document.getElementById('bflyLayer');
+  if(!layer)return;
+  /* main, light, dark edge, dot, vein */
+  var TYPES=[
+    ['#f58a1f','#ffc15a','#1a1008','#ffffff','#2a1608'],   /* monarch */
+    ['#2f7bff','#8fd0ff','#06122e','#bfe6ff','#0a1e4a'],   /* blue morpho */
+    ['#f7d117','#fff08a','#1a1405','#ffffff','#3a2e05'],   /* swallowtail */
+    ['#d6409f','#ff9ad5','#2a0a1f','#ffffff','#4a0f35'],   /* pink */
+    ['#8e5bd9','#d6bcff','#170a2e','#ffffff','#2e1458'],   /* purple */
+    ['#e8e8e8','#ffffff','#2a2a2a','#ffffff','#777777']    /* white cabbage */
+  ];
+  var uid=0;
+  function svg(t){
+    var id='bg'+(uid++),m=t[0],l=t[1],d=t[2],dot=t[3],v=t[4];
+    var FW='M50 47 C55 22 76 5 95 9 C99 11 98 28 89 43 C80 52 63 52 50 49 Z';
+    var HW='M50 49 C64 52 84 53 89 62 C91 77 77 93 65 87 C56 83 52 67 50 53 Z';
+    function side(){
+      return '<path d="'+HW+'" fill="url(#'+id+')" stroke="'+d+'" stroke-width="2.4" stroke-linejoin="round"/>'+
+        '<path d="'+FW+'" fill="url(#'+id+')" stroke="'+d+'" stroke-width="2.6" stroke-linejoin="round"/>'+
+        '<g stroke="'+v+'" stroke-width=".9" opacity=".75" fill="none" stroke-linecap="round">'+
+          '<path d="M50 47 L90 13 M50 47 L93 27 M50 47 L85 42 M50 47 L74 11"/>'+
+          '<path d="M50 50 L83 60 M50 50 L79 80 M50 50 L65 85 M50 50 L56 75"/></g>'+
+        '<g fill="'+dot+'" opacity=".9"><circle cx="93" cy="16" r="1.5"/><circle cx="94" cy="24" r="1.3"/><circle cx="91" cy="33" r="1.2"/><circle cx="87" cy="64" r="1.3"/><circle cx="85" cy="73" r="1.4"/><circle cx="76" cy="85" r="1.3"/></g>';
+    }
+    return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><defs>'+
+      '<radialGradient id="'+id+'" cx="0" cy=".5" r="1.1" fx="0" fy=".5"><stop offset="0" stop-color="'+d+'"/><stop offset=".18" stop-color="'+m+'"/><stop offset=".6" stop-color="'+m+'"/><stop offset="1" stop-color="'+l+'"/></radialGradient>'+
+      '</defs>'+
+      '<g class="wings"><g>'+side()+'</g><g transform="translate(100 0) scale(-1 1)">'+side()+'</g></g>'+
+      '<g fill="#2b1d14"><ellipse cx="50" cy="40" rx="3.2" ry="8"/><ellipse cx="50" cy="60" rx="2.3" ry="14"/><circle cx="50" cy="29" r="3.2"/></g>'+
+      '<g stroke="'+d+'" stroke-width=".6" opacity=".6"><path d="M48 55 H52 M48.2 60 H51.8 M48.5 65 H51.5 M48.8 70 H51.2"/></g>'+
+      '<path d="M49 27 Q44 16 38 12 M51 27 Q56 16 62 12" stroke="#2b1d14" stroke-width="1.1" fill="none" stroke-linecap="round"/>'+
+      '<circle cx="38" cy="12" r="1.5" fill="#2b1d14"/><circle cx="62" cy="12" r="1.5" fill="#2b1d14"/></svg>';
+  }
+  var N=3,list=[],W=window.innerWidth,H=window.innerHeight;
+  window.addEventListener('resize',function(){W=window.innerWidth;H=window.innerHeight});
+  for(var k=0;k<N;k++){
+    var el=document.createElement('div');
+    el.className='bfly';el.innerHTML=svg(TYPES[(k*2)%TYPES.length]);
+    var w=el.querySelector('.wings');
+    w.style.animationDuration=(2.3+Math.random()*0.8)+'s';
+    w.style.animationDelay=(-Math.random()*2)+'s';
+    layer.appendChild(el);
+    list.push({el:el,x:Math.random()*W,y:Math.random()*H,a:Math.random()*Math.PI*2,
+      sp:38+Math.random()*22,sc:0.85+Math.random()*0.3,
+      p1:Math.random()*6.28,p2:Math.random()*6.28,p3:Math.random()*6.28,
+      f1:0.35+Math.random()*0.2,f2:0.9+Math.random()*0.4});
+  }
+  var last=performance.now(),T=0;
+  function tick(now){
+    if(document.documentElement.classList.contains('gen')||document.documentElement.classList.contains('nobfly')){last=now;requestAnimationFrame(tick);return}
+    var dt=Math.min((now-last)/1000,0.05);last=now;T+=dt;
+    for(var i=0;i<list.length;i++){
+      var b=list[i];
+      /* smooth wandering: heading driven by slow sine waves (no sudden jumps) */
+      var turn=Math.sin(T*b.f1+b.p1)*1.1+Math.sin(T*b.f2+b.p2)*0.7;
+      b.a+=turn*dt;
+      var v=b.sp*(0.8+0.2*Math.sin(T*1.3+b.p3));
+      b.x+=Math.cos(b.a)*v*dt;
+      b.y+=Math.sin(b.a)*v*dt+Math.sin(T*3+b.p3)*6*dt;
+      var m=30;
+      if(b.x<-m)b.x=W+m;else if(b.x>W+m)b.x=-m;
+      if(b.y<-m)b.y=H+m;else if(b.y>H+m)b.y=-m;
+      b.el.style.transform='translate3d('+(b.x-11).toFixed(1)+'px,'+(b.y-11).toFixed(1)+'px,0) rotate('+(b.a+Math.PI/2).toFixed(3)+'rad) scale('+b.sc.toFixed(2)+')';
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+<script>
+/* ===== FIRESTORE SHARED SYNC PATCH ===== */
+(function(){
+  if(typeof firebase==='undefined'||!auth||!db){
+    console.warn('Firebase not ready'); return;
+  }
+
+  var SHARED_ROOT   = db.collection('shared');
+  var SHARED_DEM    = SHARED_ROOT.doc('demands').collection('items');
+  var SHARED_CFG    = SHARED_ROOT.doc('settings');
+  var lastWriterUid = null;
+
+  function newNumericId(){
+    return Date.now() * 1000 + Math.floor(Math.random()*1000);
+  }
+
+  if(typeof editingId !== 'undefined' && editingId != null){
+    editingId = Number(editingId) || null;
+  }
+
+  var SETTING_KEYS = ['bkry_view','bkry_ufont','bkry_bfly',
+                      'bkry_logo_dash','bkry_logo_pdf',
+                      'bkry_sign_bm','bkry_sign_tech'];
+
+  function pushSettings(){
+    if(!auth.currentUser) return;
+    var s = {};
+    SETTING_KEYS.forEach(function(k){
+      var v = localStorage.getItem(k);
+      if(v !== null) s[k] = v;
+    });
+    lastWriterUid = auth.currentUser.uid;
+    SHARED_CFG.set({settings:s, updatedBy:lastWriterUid,
+                    updatedAt:new Date().toISOString()},{merge:true})
+      .catch(function(e){console.warn('settings push',e)});
+  }
+
+  var _s = storage.set;
+  storage.set = function(k,v){
+    _s(k,v);
+    if(/^bkry_(view|ufont|bfly|logo_|sign_)/.test(k)) pushSettings();
+  };
+  var _as = authStorage.set;
+  authStorage.set = function(k,v){
+    _as(k,v);
+    if(/^bkry_(view|ufont|bfly|logo_|sign_)/.test(k)) pushSettings();
+  };
+
+  function pullSettings(){
+    SHARED_CFG.onSnapshot(function(doc){
+      if(!doc.exists) return;
+      var d = doc.data() || {};
+      if(d.updatedBy === auth.currentUser.uid) return;
+      var s = d.settings || {};
+      var changed = false;
+      SETTING_KEYS.forEach(function(k){
+        if(typeof s[k] === 'string' && localStorage.getItem(k) !== s[k]){
+          try{localStorage.setItem(k,s[k]); changed = true}catch(e){}
+        }
+      });
+      if(changed){
+        applyUFont(); applyBfly(); applyDashLogo();
+        if(typeof renderForm === 'function') renderForm();
+        if(view==='pending'||view==='received'||view==='total') drawList(view);
+        if(!document.getElementById('settingsOv').hidden) renderSettings();
+      }
+    });
+  }
+
+  window.loadFromCloud = function(){
+    return new Promise(function(resolve){
+      if(!auth.currentUser){ resolve(); return; }
+
+      try{
+        var oldRaw = localStorage.getItem('bkry_demands_v1');
+        if(oldRaw){
+          var oldArr = JSON.parse(oldRaw);
+          if(Array.isArray(oldArr) && oldArr.length){
+            var jobs = oldArr.map(function(d){
+              var nid = (typeof d.id==='number') ? d.id : (Number(d.id)||newNumericId());
+              var clean = JSON.parse(JSON.stringify(d));
+              clean.numId   = nid;
+              clean.created = clean.created || new Date(nid).toISOString();
+              clean.ownerUid = auth.currentUser.uid;
+              delete clean.id;
+              return SHARED_DEM.doc(String(nid)).set(clean,{merge:true});
+            });
+            Promise.all(jobs).then(function(){
+              localStorage.removeItem('bkry_demands_v1');
+              console.log('[migrate]', oldArr.length, 'demands -> shared');
+            }).catch(function(e){console.warn('migrate err',e)});
+          }
+        }
+      }catch(e){}
+
+      SHARED_DEM.orderBy('created','desc').onSnapshot(function(snap){
+        var arr = [];
+        snap.forEach(function(doc){
+          var o = doc.data() || {};
+          var nid = o.numId;
+          if(typeof nid !== 'number'){
+            nid = Number(doc.id);
+            if(isNaN(nid)) nid = newNumericId();
+            o.numId = nid;
+          }
+          o.id = nid;
+          arr.push(o);
+        });
+        window.demands = arr;
+        demands = arr;
+        if(typeof view !== 'undefined'){
+          if(view==='home'){ try{renderHome()}catch(e){} }
+          else if(view==='pending'||view==='received'||view==='total'){
+            try{drawList(view)}catch(e){}
+          }
+        }
+      }, function(err){ console.warn('listener err', err); toast('Sync error: '+err.code); });
+
+      pullSettings();
+      SHARED_CFG.get().then(function(doc){
+        if(doc.exists){
+          var s = (doc.data()||{}).settings||{};
+          SETTING_KEYS.forEach(function(k){
+            if(typeof s[k]==='string') try{localStorage.setItem(k,s[k])}catch(e){}
+          });
+          applyUFont(); applyBfly(); applyDashLogo();
+          resolve();
+        } else {
+          pushSettings();
+          resolve();
+        }
+      }).catch(function(){ resolve(); });
+    });
+  };
+
+  window.saveToPending = function(){
+    if(!auth.currentUser){ toast('Login required'); return; }
+
+    var p = active, pg = PAGES[p];
+    var total = rowCount(p), items = [];
+    for(var r=0; r<total; r++){
+      var it = (data[p+'_'+r+'_0']||'').trim();
+      if(pg.type==='demand'){
+        items.push({item:it,
+          inStore:(data[p+'_'+r+'_1']||'').trim(),
+          demand:(data[p+'_'+r+'_2']||'').trim(),
+          remarks:(data[p+'_'+r+'_3']||'').trim(),
+          received:false, receivedDate:''});
+      } else {
+        items.push({item:it,
+          inStore:(data[p+'_'+r+'_1']||'').trim(),
+          demand:'',
+          remarks:(data[p+'_'+r+'_2']||'').trim(),
+          received:false, receivedDate:''});
+      }
+      var _fm = cellFm(p, r, pg.type); if(_fm) items[items.length-1].fm = _fm;
+    }
+
+    var defBranch = "تہذیب بیکرز-G9";
+    var defDate   = getTodayLocal();
+    var br  = (data[p+'_branch']!==undefined && data[p+'_branch']!=='') ? data[p+'_branch'] : defBranch;
+    var st  = (data[p+'_sendto']||'').trim();
+    var bf  = data[p+'_branch_f']||'', sf = data[p+'_sendto_f']||'';
+    var dt  = (data[p+'_date']!==undefined && data[p+'_date']!=='') ? data[p+'_date'] : defDate;
+
+    var payload = {
+      formType: pg.type, form: pg.tab,
+      branch: br.trim(), dateText: dt.trim(), sendTo: st, bf: bf, sf: sf,
+      items: items,
+      ownerUid: auth.currentUser.uid
+    };
+
+    if(editingId !== null && editingId !== undefined){
+      var docRef = SHARED_DEM.doc(String(editingId));
+      docRef.get().then(function(doc){
+        var old = doc.exists ? doc.data() : {};
+        var oldItems = old.items || [];
+        for(var k=0; k<items.length && k<oldItems.length; k++){
+          if(oldItems[k].received && items[k].item===oldItems[k].item){
+            items[k].received     = oldItems[k].received;
+            items[k].receivedDate = oldItems[k].receivedDate;
+          }
+        }
+        payload.items   = items;
+        payload.numId   = (typeof old.numId==='number') ? old.numId : Number(editingId);
+        payload.created = old.created || new Date().toISOString();
+        payload.lastEditorUid = auth.currentUser.uid;
+        return docRef.set(payload,{merge:true});
+      }).then(function(){
+        toast('Form updated ✓');
+        editingId = null;
+        if(confirm('Form saaf kar dun?')) clearNow();
+      }).catch(function(e){ console.error(e); toast('Update fail: '+(e.message||'')) });
+    } else {
+      var nid = newNumericId();
+      payload.numId   = nid;
+      payload.created = new Date().toISOString();
+      SHARED_DEM.doc(String(nid)).set(payload).then(function(){
+        toast('Pending mein save ✓');
+        if(confirm('Form saaf kar dun?')) clearNow();
+      }).catch(function(e){ console.error(e); toast('Save fail: '+(e.message||'')) });
+    }
+  };
+
+  window.setRecv = function(id, idxs, checked){
+    if(!auth.currentUser) return;
+    var d = demands.filter(function(x){ return String(x.id) === String(id) })[0];
+    if(!d) return;
+    idxs.forEach(function(i){
+      if(d.items[i]){
+        d.items[i].received     = checked;
+        d.items[i].receivedDate = checked ? todayISO() : '';
+      }
+    });
+    if(typeof openIds !== 'undefined') openIds[id] = true;
+    SHARED_DEM.doc(String(id)).update({
+      items: d.items,
+      lastEditorUid: auth.currentUser.uid,
+      lastEditAt: new Date().toISOString()
+    }).catch(function(e){ console.warn('setRecv err', e) });
+    drawList(view);
+    toast(checked ? 'Received ✓' : 'Wapas Pending');
+  };
+
+  window.delDemand = function(id){
+    if(!confirm('Yeh poora form delete kar den?')) return;
+    if(!auth.currentUser) return;
+    demands = demands.filter(function(x){ return String(x.id)!==String(id) });
+    window.demands = demands;
+    drawList(view);
+    SHARED_DEM.doc(String(id)).delete()
+      .catch(function(e){ console.warn('del err', e) });
+  };
+
+  window.saveDemands = function(){};
+
+  console.log('[firebase-patch shared] active');
+})();
+</script>
+
+</body>
+</html>
