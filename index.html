@@ -422,13 +422,71 @@ function applyView(isPc){document.getElementById('vp').setAttribute('content',is
 function updateViewport(isAppActive){applyView(isAppActive&&authStorage.get('bkry_view')==='pc')}
 function switchToSignup(){document.getElementById('login-section').style.display='none';document.getElementById('signup-section').style.display='block'}
 function switchToLogin(){document.getElementById('signup-section').style.display='none';document.getElementById('login-section').style.display='block'}
-function togglePassword(inputId,iconElement){var p=document.getElementById(inputId);if(p.type==='password'){p.type='text';iconElement.textContent='🙈'}else{p.type='password';iconElement.textContent='👁️'}}
-function loginUser(){authStorage.set('bkry_logged_in','true');document.getElementById('auth-wrapper').style.display='none';document.getElementById('app-wrapper').style.display='flex';updateViewport(true);appActive=true;show('home');toast('Login Successful ✓')}
-function signupUser(){authStorage.set('bkry_logged_in','true');document.getElementById('auth-wrapper').style.display='none';document.getElementById('app-wrapper').style.display='flex';updateViewport(true);appActive=true;show('home');toast('Account Created ✓')}
-function logoutUser(){var nv=navDepth;guardOn=false;navDepth=0;appActive=false;if(nv>0){try{history.go(-nv)}catch(e){}}authStorage.remove('bkry_logged_in');document.getElementById('app-wrapper').style.display='none';document.getElementById('auth-wrapper').style.display='flex';updateViewport(false);switchToLogin();toast('Logged out')}
-window.onload=function(){if(authStorage.get('bkry_logged_in')==='true'){document.getElementById('auth-wrapper').style.display='none';document.getElementById('app-wrapper').style.display='flex';applyView(authStorage.get('bkry_view')==='pc');appActive=true;show('home')}else{updateViewport(false)}};
+// ==========================================
+// FIREBASE AUTH & SYNC
+// ==========================================
+var firebaseConfig = {
+  apiKey: "AIzaSyCxE4pdaLZ9WUAhz4sg7SxUdPlAD--4Kj4",
+  authDomain: "generator-reading.firebaseapp.com",
+  projectId: "generator-reading",
+  storageBucket: "generator-reading.firebasestorage.app",
+  messagingSenderId: "1019340215275",
+  appId: "1:1019340215275:web:40ae628c2b4efb11f17fae"
+};
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+var auth = firebase.auth();
+var db = firebase.firestore();
+try { db.enablePersistence({synchronizeTabs:true}); } catch(e) {}
 
-/* ============ APP ============ */
+function loginUser(){
+  var email=document.getElementById('login-email').value;
+  var pass=document.getElementById('login-password').value;
+  toast('Logging in…');
+  auth.signInWithEmailAndPassword(email,pass).catch(function(e){toast(e.message)});
+}
+
+function signupUser(){
+  var name=document.getElementById('signup-name').value;
+  var email=document.getElementById('signup-email').value;
+  var pass=document.getElementById('signup-password').value;
+  toast('Creating account…');
+  auth.createUserWithEmailAndPassword(email,pass).then(function(cred){
+    return db.collection('users').doc(cred.user.uid).set({
+      profile:{name:name,email:email,createdAt:new Date().toISOString()}
+    },{merge:true});
+  }).then(function(){ toast('Account Created ✓'); }).catch(function(e){toast(e.message)});
+}
+
+function logoutUser(){
+  var nv=navDepth;guardOn=false;navDepth=0;appActive=false;
+  if(nv>0){try{history.go(-nv)}catch(e){}}
+  auth.signOut().then(function(){toast('Logged out')}).catch(function(e){toast(e.message)});
+}
+
+auth.onAuthStateChanged(function(user){
+  if(user){
+    currentUser=user;
+    document.getElementById('auth-wrapper').style.display='none';
+    document.getElementById('app-wrapper').style.display='flex';
+    applyView(authStorage.get('bkry_view')==='pc');
+    appActive=true;
+    
+    setTimeout(function(){
+      if (typeof loadFromCloud === 'function') {
+        loadFromCloud().then(function(){ show('home'); });
+      } else {
+        show('home');
+      }
+    }, 150);
+
+  } else {
+    currentUser=null;
+    document.getElementById('app-wrapper').style.display='none';
+    document.getElementById('auth-wrapper').style.display='flex';
+    updateViewport(false);switchToLogin();
+  }
+});
+  /* ============ APP ============ */
 var storage={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 function setViewMode(isPc){authStorage.set('bkry_view',isPc?'pc':'mobile');applyView(isPc);renderSettings()}
 /* ============ BACKUP / RESTORE ============ */
